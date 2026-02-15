@@ -1,4 +1,0 @@
-
-# Pruebas
-
-### carpeta con archivos de prueba de tecnologias
