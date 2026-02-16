@@ -1,4 +1,7 @@
+# Flutter
 
-# Móvil
+Este directorio contiene la aplicación móvil desarrollada en Flutter.
 
-### Aplicación móvil desarrollada con Flutter
+## Descripción
+
+Aplicación multiplataforma Flutter.
