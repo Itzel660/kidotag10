@@ -47,6 +47,10 @@ void drawStatus(const char* line1, const char* line2, const char* line3)
     display.setCursor(10, 70);
     display.println(line3);
   } while (display.nextPage());
+  
+  // Importante: dar tiempo a la pantalla para completar el refresh
+  display.hibernate();
+  delay(100); // Pequeño delay para asegurar que la pantalla se actualice
 }
 
 String uidToHex(uint8_t *uid, uint8_t uidLength)
@@ -61,7 +65,9 @@ String uidToHex(uint8_t *uid, uint8_t uidLength)
 }
 
 void setup(void) {
-  delay(2000);
+  delay(1000);
+  Serial.begin(74880);
+  Serial.println("\n\n=== Sistema Iniciando ===");
   
   display.init();
   drawStatus("Iniciando...", "Sistema", "Arrancando");
@@ -106,7 +112,7 @@ void loop(void) {
     
     // Mostrar en display
     drawStatus("Tarjeta NFC", uidHex.c_str(), "Enviando...");
-    delay(400); // Dar tiempo a que la pantalla actualice
+    delay(800); // Dar tiempo a que la pantalla e-paper complete el refresh
     
     // Enviar al servidor
     if (WiFi.status() == WL_CONNECTED) {
@@ -114,29 +120,75 @@ void loop(void) {
       http.begin(wifiClient, serverUrl);
       http.addHeader("Content-Type", "application/json");
       
-      String jsonPayload = "{\"uidTarjeta\":\"" + uidHex + "\",\"tipo\":\"entrada\"}";
+      String jsonPayload = "{\"uidTarjeta\":\"" + uidHex + "\"}";
+      
+      Serial.println("\n[HTTP] Enviando request...");
+      Serial.println("URL: " + String(serverUrl));
+      Serial.println("Payload: " + jsonPayload);
       
       int httpCode = http.POST(jsonPayload);
       
+      Serial.println("[HTTP] Código de respuesta: " + String(httpCode));
+      
       if (httpCode > 0) {
         String response = http.getString();
+        Serial.println("[HTTP] Respuesta recibida:");
+        Serial.println(response);
+        Serial.println("---");
         
-        if (httpCode == 200 || httpCode == 201) {
+        if (httpCode == 204) {
+          // Sin contenido - tag pasado en ventana de 30 seg o 2 min
+          // Volver rápidamente al estado de espera sin mostrar mensaje
+          Serial.println("[INFO] Respuesta 204 - Tag rechazado por ventana de tiempo");
+          drawStatus("Sistema Listo", "Esperando", "tarjeta NFC");
+          delay(1000); // Delay corto para siguiente lectura
+          http.end();
+          return; // Salir del loop para evitar el delay de 5 segundos
+        } else if (httpCode == 200 || httpCode == 201) {
           // Parsear respuesta JSON
           StaticJsonDocument<512> doc;
           DeserializationError error = deserializeJson(doc, response);
           
-          if (!error && doc["ok"] == true) {
-            String tipo = doc["data"]["tipo"] | "entrada";
-            String hora = doc["data"]["fechaHora"] | "";
-            // Extraer solo la hora HH:MM de la fechaHora ISO
-            String horaCorta = "";
-            if (hora.length() >= 16) {
-              horaCorta = hora.substring(11, 16); // HH:MM
+          if (!error) {
+            // Verificar si la respuesta es válida
+            if (doc.containsKey("ok") && doc["ok"] == true && doc.containsKey("data")) {
+              // Extraer datos con verificación
+              const char* nombrePtr = doc["data"]["nombre"];
+              const char* tipoPtr = doc["data"]["tipo"];
+              const char* horaPtr = doc["data"]["hora"];
+              
+              String nombre = nombrePtr ? String(nombrePtr) : "Alumno";
+              String tipo = tipoPtr ? String(tipoPtr) : "entrada";
+              String hora = horaPtr ? String(horaPtr) : "";
+              
+              Serial.println("[INFO] Datos parseados:");
+              Serial.println("  Nombre: " + nombre);
+              Serial.println("  Tipo: " + tipo);
+              Serial.println("  Hora: " + hora);
+              
+              // Mostrar mensaje personalizado
+              String tipoMsg = (tipo == "entrada") ? "ENTRADA" : "SALIDA";
+              Serial.println("[DISPLAY] Actualizando pantalla: " + tipoMsg + " | " + nombre + " | " + hora);
+              drawStatus(tipoMsg.c_str(), nombre.c_str(), hora.c_str());
+            } else {
+              Serial.println("[WARN] JSON sin estructura esperada");
+              drawStatus("Exito!", uidHex.c_str(), "Registrado");
             }
-            drawStatus("Registrado!", tipo.c_str(), horaCorta.c_str());
           } else {
-            drawStatus("Exito!", uidHex.c_str(), "Registrado");
+            // Error al parsear JSON
+            Serial.println("[ERROR] Error al parsear JSON: " + String(error.c_str()));
+            drawStatus("Error JSON", "Parse error", uidHex.c_str());
+          }
+        } else if (httpCode == 404) {
+          // Tag no registrado
+          StaticJsonDocument<256> doc;
+          DeserializationError error = deserializeJson(doc, response);
+          
+          if (!error && doc.containsKey("error")) {
+            String mensaje = doc["error"]["mensaje"] | "Tag no registrado";
+            drawStatus("ERROR", "Tag sin", "registrar");
+          } else {
+            drawStatus("ERROR", "Tag no", "registrado");
           }
         } else {
           // Intentar obtener mensaje de error del servidor
@@ -161,7 +213,7 @@ void loop(void) {
     
     delay(5000); // Tiempo largo para leer la respuesta en pantalla
     drawStatus("Sistema Listo", "Esperando", "tarjeta NFC");
-    delay(2000); // Dar tiempo a que actualice antes de siguiente lectura
+    delay(1500); // Dar tiempo a que actualice antes de siguiente lectura
   }
   
   delay(100);

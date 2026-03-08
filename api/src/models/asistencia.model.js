@@ -6,6 +6,11 @@ const asistenciaSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  nombre: {
+    type: String,
+    required: true,
+    trim: true
+  },
   tipo: {
     type: String,
     required: true,

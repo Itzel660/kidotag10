@@ -1,0 +1,11 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lock body -->
+  <circle cx="24" cy="28" r="12" stroke="#00d9c0" stroke-width="2.8" fill="none"/>
+  
+  <!-- Lock shackle -->
+  <path d="M 18 20 C 18 16.6863 20.6863 14 24 14 C 27.3137 14 30 16.6863 30 20 L 30 28" stroke="#00d9c0" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  
+  <!-- Eyes -->
+  <circle cx="20" cy="27" r="2" fill="#00d9c0"/>
+  <circle cx="28" cy="27" r="2" fill="#00d9c0"/>
+</svg>

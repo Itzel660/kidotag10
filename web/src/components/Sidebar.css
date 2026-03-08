@@ -1,0 +1,147 @@
+.sidebar {
+  width: 240px;
+  background: var(--secondary-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: -240px;
+  top: 0;
+  box-shadow: var(--shadow-lg);
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+/* Mostrar sidebar en tablets y desktop */
+@media (min-width: 768px) {
+  .sidebar {
+    left: 0;
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.logo-container {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+}
+
+.logo-container h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+@media (min-width: 768px) {
+  .logo-container {
+    padding: 1rem 0.75rem;
+  }
+  
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .logo-container h2 {
+    font-size: 1.25rem;
+  }
+}
+
+.nav-menu {
+  flex: 1;
+  padding: 0.5rem 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background-color: rgba(0, 217, 192, 0.1);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background-color: var(--accent-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-icon {
+  width: 18px;
+  font-size: 1.1rem;
+}
+
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+  }
+
+  .logo-container h2,
+  .nav-item span,
+  .user-name {
+    display: none;
+  }
+
+  .logo {
+    margin: 0 auto;
+  }
+
+  .nav-item {
+    justify-content: center;
+  }
+}

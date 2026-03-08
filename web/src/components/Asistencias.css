@@ -1,0 +1,281 @@
+.asistencias {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .section-header {
+    margin-bottom: 1rem;
+  }
+}
+
+.section-header h2 {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+}
+
+.filter-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 140px;
+}
+
+@media (min-width: 768px) {
+  .input-group {
+    flex: initial;
+  }
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.input-field {
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .input-field {
+    font-size: 0.85rem;
+    width: auto;
+  }
+}
+
+.input-group .input-field {
+  padding-left: 2.25rem;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.input-field option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.btn-filter {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .btn-filter {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.85rem;
+  }
+}
+
+.btn-filter:hover {
+  background: var(--accent-secondary);
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .stats-row {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.mini-stat {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .mini-stat {
+    padding: 0.75rem;
+  }
+}
+
+.mini-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .mini-stat-label {
+    font-size: 0.75rem;
+  }
+}
+
+.mini-stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .mini-stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+.table-container {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .table-container {
+    padding: 0.85rem;
+  }
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+@media (min-width: 768px) {
+  .data-table {
+    min-width: 100%;
+  }
+}
+
+.data-table thead {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.data-table th {
+  padding: 0.5rem 0.5rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+@media (min-width: 768px) {
+  .data-table th {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+.data-table td {
+  padding: 0.65rem 0.5rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .data-table td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+.data-table tbody tr:hover {
+  background: rgba(0, 217, 192, 0.05);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-entrada {
+  background: rgba(0, 217, 192, 0.2);
+  color: var(--accent-cyan);
+}
+
+.badge-salida {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FFB347;
+}
+
+.group-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: rgba(107, 143, 255, 0.2);
+  color: #6B8FFF;
+  font-weight: 600;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem !important;
+  font-style: italic;
+}
