@@ -368,7 +368,7 @@
 
 .badge-inactivo {
   background: rgba(239, 68, 68, 0.2);
-  color: #FF6B6B;
+  color: #ff6b6b;
 }
 
 @media (max-width: 768px) {

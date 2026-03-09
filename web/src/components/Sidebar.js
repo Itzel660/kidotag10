@@ -1,29 +1,34 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartLine, faClipboardCheck, faUsers, faFileAlt } from '@fortawesome/free-solid-svg-icons';
-import './Sidebar.css';
-import logo from '../assets/logo.svg';
+import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChartLine,
+  faClipboardCheck,
+  faUsers,
+  faFileAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import "./Sidebar.css";
+import logo from "../assets/logo.svg";
 
 const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
   const itemsMenu = [
-    { id: 'overview', etiqueta: 'Overview', icono: faChartLine },
-    { id: 'asistencias', etiqueta: 'Asistencias', icono: faClipboardCheck },
-    { id: 'alumnos', etiqueta: 'Alumnos', icono: faUsers },
-    { id: 'reportes', etiqueta: 'Reportes', icono: faFileAlt }
+    { id: "overview", etiqueta: "Overview", icono: faChartLine },
+    { id: "asistencias", etiqueta: "Asistencias", icono: faClipboardCheck },
+    { id: "alumnos", etiqueta: "Alumnos", icono: faUsers },
+    { id: "reportes", etiqueta: "Reportes", icono: faFileAlt },
   ];
 
   return (
-    <aside className={`sidebar ${abierto ? 'active' : ''}`}>
+    <aside className={`sidebar ${abierto ? "active" : ""}`}>
       <div className="logo-container">
         <img src={logo} alt="Kidotag" className="logo" />
         <h2>KIDOTAG</h2>
       </div>
-      
+
       <nav className="nav-menu">
-        {itemsMenu.map(item => (
+        {itemsMenu.map((item) => (
           <button
             key={item.id}
-            className={`nav-item ${seccionActiva === item.id ? 'active' : ''}`}
+            className={`nav-item ${seccionActiva === item.id ? "active" : ""}`}
             onClick={() => setSeccionActiva(item.id)}
           >
             <FontAwesomeIcon icon={item.icono} className="nav-icon" />

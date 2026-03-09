@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faCalendar } from '@fortawesome/free-solid-svg-icons';
-import io from 'socket.io-client';
-import './Asistencias.css';
+import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFilter, faCalendar } from "@fortawesome/free-solid-svg-icons";
+import io from "socket.io-client";
+import "./Asistencias.css";
 
-const API_URL = 'http://localhost:3000/api/v1';
-const SOCKET_URL = 'http://localhost:3000';
+const API_URL = "https://kidotag10.vercel.app/api/v1";
+const SOCKET_URL = "https://kidotag10.vercel.app";
 
 const Asistencias = () => {
-  const [fechaFiltro, setFechaFiltro] = useState('');
-  const [grupoFiltro, setGrupoFiltro] = useState('');
+  const [fechaFiltro, setFechaFiltro] = useState("");
+  const [grupoFiltro, setGrupoFiltro] = useState("");
   const [registros, setRegistros] = useState([]);
   const [estadisticasFiltradas, setEstadisticasFiltradas] = useState({
     entradas: 0,
     salidas: 0,
-    total: 0
+    total: 0,
   });
 
   useEffect(() => {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = new Date().toISOString().split("T")[0];
     setFechaFiltro(hoy);
   }, []);
 
@@ -32,30 +32,34 @@ const Asistencias = () => {
   useEffect(() => {
     const socket = io(SOCKET_URL);
 
-    socket.on('connect', () => {
-      console.log('[Socket] Conectado al servidor en tiempo real');
+    socket.on("connect", () => {
+      console.log("[Socket] Conectado al servidor en tiempo real");
     });
 
-    socket.on('nueva-asistencia', (asistencia) => {
-      console.log('[Socket] Nueva asistencia recibida:', asistencia);
-      
+    socket.on("nueva-asistencia", (asistencia) => {
+      console.log("[Socket] Nueva asistencia recibida:", asistencia);
+
       // Verificar si la asistencia es del día actual filtrado
-      const fechaAsistencia = new Date(asistencia.fechaHora).toISOString().split('T')[0];
+      const fechaAsistencia = new Date(asistencia.fechaHora)
+        .toISOString()
+        .split("T")[0];
       if (fechaAsistencia === fechaFiltro) {
         // Agregar al inicio de la lista
-        setRegistros(prev => [asistencia, ...prev]);
-        
+        setRegistros((prev) => [asistencia, ...prev]);
+
         // Actualizar estadísticas
-        setEstadisticasFiltradas(prev => ({
-          entradas: asistencia.tipo === 'entrada' ? prev.entradas + 1 : prev.entradas,
-          salidas: asistencia.tipo === 'salida' ? prev.salidas + 1 : prev.salidas,
-          total: prev.total + 1
+        setEstadisticasFiltradas((prev) => ({
+          entradas:
+            asistencia.tipo === "entrada" ? prev.entradas + 1 : prev.entradas,
+          salidas:
+            asistencia.tipo === "salida" ? prev.salidas + 1 : prev.salidas,
+          total: prev.total + 1,
         }));
       }
     });
 
-    socket.on('disconnect', () => {
-      console.log('[Socket] Desconectado del servidor');
+    socket.on("disconnect", () => {
+      console.log("[Socket] Desconectado del servidor");
     });
 
     return () => {
@@ -65,44 +69,49 @@ const Asistencias = () => {
 
   const manejarFiltro = async () => {
     if (!fechaFiltro) {
-      alert('Por favor selecciona una fecha');
+      alert("Por favor selecciona una fecha");
       return;
     }
 
     try {
-      console.log('[Asistencias] Filtrando por fecha:', fechaFiltro);
+      console.log("[Asistencias] Filtrando por fecha:", fechaFiltro);
       // Enviar fecha como parámetro al servidor para filtrado eficiente
-      const respuesta = await fetch(`${API_URL}/asistencias?fecha=${fechaFiltro}`);
+      const respuesta = await fetch(
+        `${API_URL}/asistencias?fecha=${fechaFiltro}`,
+      );
       const datos = await respuesta.json();
-      
-      console.log('[Asistencias] Respuesta recibida:', datos);
-      
+
+      console.log("[Asistencias] Respuesta recibida:", datos);
+
       if (datos.ok) {
-        console.log('[Asistencias] Total registros:', datos.data.length);
+        console.log("[Asistencias] Total registros:", datos.data.length);
         // Los datos ya vienen filtrados del servidor
-        const entradas = datos.data.filter(r => r.tipo === 'entrada').length;
-        const salidas = datos.data.filter(r => r.tipo === 'salida').length;
-        
+        const entradas = datos.data.filter((r) => r.tipo === "entrada").length;
+        const salidas = datos.data.filter((r) => r.tipo === "salida").length;
+
         setEstadisticasFiltradas({
           entradas,
           salidas,
-          total: datos.data.length
+          total: datos.data.length,
         });
-        
+
         setRegistros(datos.data);
       } else {
-        console.error('[Asistencias] Error en respuesta:', datos);
+        console.error("[Asistencias] Error en respuesta:", datos);
       }
     } catch (error) {
-      console.error('Error al filtrar asistencias:', error);
+      console.error("Error al filtrar asistencias:", error);
     }
   };
 
   const formatearFechaHora = (cadenaFecha) => {
     const fecha = new Date(cadenaFecha);
     return {
-      fecha: fecha.toLocaleDateString('es-MX'),
-      hora: fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      fecha: fecha.toLocaleDateString("es-MX"),
+      hora: fecha.toLocaleTimeString("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
   };
 
@@ -140,7 +149,9 @@ const Asistencias = () => {
       <div className="stats-row">
         <div className="mini-stat">
           <div className="mini-stat-label">Entradas</div>
-          <div className="mini-stat-value">{estadisticasFiltradas.entradas}</div>
+          <div className="mini-stat-value">
+            {estadisticasFiltradas.entradas}
+          </div>
         </div>
         <div className="mini-stat">
           <div className="mini-stat-label">Salidas</div>
@@ -173,10 +184,12 @@ const Asistencias = () => {
             ) : (
               registros.map((registro, indice) => {
                 const { fecha, hora } = formatearFechaHora(registro.fechaHora);
-                
+
                 return (
                   <tr key={indice}>
-                    <td><strong>{registro.nombre || 'Desconocido'}</strong></td>
+                    <td>
+                      <strong>{registro.nombre || "Desconocido"}</strong>
+                    </td>
                     <td>
                       <span className={`badge badge-${registro.tipo}`}>
                         {registro.tipo}
@@ -184,7 +197,9 @@ const Asistencias = () => {
                     </td>
                     <td>{fecha}</td>
                     <td>{hora}</td>
-                    <td><small>{registro.uidTarjeta}</small></td>
+                    <td>
+                      <small>{registro.uidTarjeta}</small>
+                    </td>
                   </tr>
                 );
               })

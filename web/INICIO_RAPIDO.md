@@ -3,11 +3,13 @@
 ## Pasos para ejecutar la aplicación
 
 ### 1. Instalar dependencias (solo la primera vez)
+
 ```bash
 npm install
 ```
 
 ### 2. Iniciar el servidor de desarrollo
+
 ```bash
 npm start
 ```
@@ -15,6 +17,7 @@ npm start
 La aplicación se abrirá automáticamente en http://localhost:3000
 
 ### 3. Asegúrate de que el API esté corriendo
+
 ```bash
 # En otra terminal, navega a la carpeta api
 cd ../api
@@ -66,12 +69,16 @@ web/
 ## Solución de problemas
 
 ### Error de puerto ocupado
+
 Si el puerto 3000 está ocupado, puedes cambiarlo:
+
 - Windows: `set PORT=3001 && npm start`
 - Mac/Linux: `PORT=3001 npm start`
 
 ### El API no responde
+
 Verifica que el servidor API esté corriendo en el puerto 3000
 
 ### Dependencias faltantes
+
 Ejecuta `npm install` nuevamente

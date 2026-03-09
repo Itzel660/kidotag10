@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus, faEdit, faTrash, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { getApiUrl, apiGet, apiPost, apiPut, apiDelete } from '../config/api.config';
 import './Alumnos.css';
-
-const API_URL = 'http://localhost:3000/api/v1';
 
 const Alumnos = () => {
   const [alumnos, setAlumnos] = useState([]);
@@ -18,8 +17,7 @@ const Alumnos = () => {
 
   const cargarAlumnos = async () => {
     try {
-      const respuesta = await fetch(`${API_URL}/alumnos`);
-      const datos = await respuesta.json();
+      const datos = await apiGet('alumnos');
       if (datos.ok) {
         setAlumnos(datos.data);
       }
@@ -32,18 +30,9 @@ const Alumnos = () => {
     e.preventDefault();
     
     try {
-      const metodo = alumnoEditando ? 'PUT' : 'POST';
-      const url = alumnoEditando 
-        ? `${API_URL}/alumnos/${alumnoEditando._id}` 
-        : `${API_URL}/alumnos`;
-
-      const respuesta = await fetch(url, {
-        method: metodo,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const datos = await respuesta.json();
+      const datos = alumnoEditando
+        ? await apiPut(`alumnos/${alumnoEditando._id}`, formData)
+        : await apiPost('alumnos', formData);
       
       if (datos.ok) {
         alert(alumnoEditando ? 'Alumno actualizado correctamente' : 'Alumno registrado correctamente');
@@ -70,11 +59,7 @@ const Alumnos = () => {
     if (!window.confirm(`¿Estás seguro de eliminar a ${nombre}?`)) return;
 
     try {
-      const respuesta = await fetch(`${API_URL}/alumnos/${id}`, {
-        method: 'DELETE'
-      });
-
-      const datos = await respuesta.json();
+      const datos = await apiDelete(`alumnos/${id}`);
       
       if (datos.ok) {
         alert('Alumno eliminado correctamente');

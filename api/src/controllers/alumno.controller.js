@@ -1,4 +1,4 @@
-const Alumno = require('../models/alumno.model');
+const Alumno = require("../models/alumno.model");
 
 // Busca un alumno por uidTarjeta (uso interno)
 exports.buscarAlumnoPorTag = async (uidTarjeta) => {
@@ -9,14 +9,14 @@ exports.buscarAlumnoPorTag = async (uidTarjeta) => {
 exports.registrarAlumno = async (req, res) => {
   try {
     const { nombre, uidTarjeta } = req.body;
-    
+
     if (!nombre || !uidTarjeta) {
       return res.status(400).json({
         ok: false,
         error: {
           codigo: "DATOS_INVALIDOS",
-          mensaje: "Nombre y UID de tarjeta son requeridos"
-        }
+          mensaje: "Nombre y UID de tarjeta son requeridos",
+        },
       });
     }
 
@@ -27,8 +27,8 @@ exports.registrarAlumno = async (req, res) => {
         ok: false,
         error: {
           codigo: "UID_DUPLICADO",
-          mensaje: "Este UID ya está registrado para otro alumno"
-        }
+          mensaje: "Este UID ya está registrado para otro alumno",
+        },
       });
     }
 
@@ -42,17 +42,17 @@ exports.registrarAlumno = async (req, res) => {
       data: {
         _id: alumno._id,
         nombre: alumno.nombre,
-        uidTarjeta: alumno.uidTarjeta
-      }
+        uidTarjeta: alumno.uidTarjeta,
+      },
     });
   } catch (error) {
-    console.error('[ALUMNO] Error al registrar:', error);
+    console.error("[ALUMNO] Error al registrar:", error);
     res.status(500).json({
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error interno del servidor"
-      }
+        mensaje: "Error interno del servidor",
+      },
     });
   }
 };
@@ -60,20 +60,27 @@ exports.registrarAlumno = async (req, res) => {
 // Listar todos los alumnos
 exports.listarAlumnos = async (req, res) => {
   try {
-    const alumnos = await Alumno.find().sort({ nombre: 1 }).lean();
-    
+    let query = {};
+
+    // Si hay filtro de alumnos permitidos (para tutores)
+    if (req.alumnosPermitidos) {
+      query._id = { $in: req.alumnosPermitidos };
+    }
+
+    const alumnos = await Alumno.find(query).sort({ nombre: 1 }).lean();
+
     res.status(200).json({
       ok: true,
-      data: alumnos
+      data: alumnos,
     });
   } catch (error) {
-    console.error('[ALUMNO] Error al listar:', error);
+    console.error("[ALUMNO] Error al listar:", error);
     res.status(500).json({
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error interno del servidor"
-      }
+        mensaje: "Error interno del servidor",
+      },
     });
   }
 };
@@ -83,29 +90,29 @@ exports.obtenerAlumno = async (req, res) => {
   try {
     const { id } = req.params;
     const alumno = await Alumno.findById(id).lean();
-    
+
     if (!alumno) {
       return res.status(404).json({
         ok: false,
         error: {
           codigo: "ALUMNO_NO_ENCONTRADO",
-          mensaje: "Alumno no encontrado"
-        }
+          mensaje: "Alumno no encontrado",
+        },
       });
     }
 
     res.status(200).json({
       ok: true,
-      data: alumno
+      data: alumno,
     });
   } catch (error) {
-    console.error('[ALUMNO] Error al obtener:', error);
+    console.error("[ALUMNO] Error al obtener:", error);
     res.status(500).json({
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error interno del servidor"
-      }
+        mensaje: "Error interno del servidor",
+      },
     });
   }
 };
@@ -115,14 +122,14 @@ exports.actualizarAlumno = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, uidTarjeta } = req.body;
-    
+
     if (!nombre && !uidTarjeta) {
       return res.status(400).json({
         ok: false,
         error: {
           codigo: "DATOS_INVALIDOS",
-          mensaje: "Debe proporcionar al menos un campo para actualizar"
-        }
+          mensaje: "Debe proporcionar al menos un campo para actualizar",
+        },
       });
     }
 
@@ -134,16 +141,18 @@ exports.actualizarAlumno = async (req, res) => {
           ok: false,
           error: {
             codigo: "UID_DUPLICADO",
-            mensaje: "Este UID ya está registrado para otro alumno"
-          }
+            mensaje: "Este UID ya está registrado para otro alumno",
+          },
         });
       }
     }
 
     const alumno = await Alumno.findByIdAndUpdate(
       id,
-      { $set: { ...(nombre && { nombre }), ...(uidTarjeta && { uidTarjeta }) } },
-      { new: true }
+      {
+        $set: { ...(nombre && { nombre }), ...(uidTarjeta && { uidTarjeta }) },
+      },
+      { new: true },
     ).lean();
 
     if (!alumno) {
@@ -151,25 +160,27 @@ exports.actualizarAlumno = async (req, res) => {
         ok: false,
         error: {
           codigo: "ALUMNO_NO_ENCONTRADO",
-          mensaje: "Alumno no encontrado"
-        }
+          mensaje: "Alumno no encontrado",
+        },
       });
     }
 
-    console.log(`[ALUMNO] ✓ Actualizado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`);
+    console.log(
+      `[ALUMNO] ✓ Actualizado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`,
+    );
 
     res.status(200).json({
       ok: true,
-      data: alumno
+      data: alumno,
     });
   } catch (error) {
-    console.error('[ALUMNO] Error al actualizar:', error);
+    console.error("[ALUMNO] Error al actualizar:", error);
     res.status(500).json({
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error interno del servidor"
-      }
+        mensaje: "Error interno del servidor",
+      },
     });
   }
 };
@@ -179,32 +190,33 @@ exports.eliminarAlumno = async (req, res) => {
   try {
     const { id } = req.params;
     const alumno = await Alumno.findByIdAndDelete(id).lean();
-    
+
     if (!alumno) {
       return res.status(404).json({
         ok: false,
         error: {
           codigo: "ALUMNO_NO_ENCONTRADO",
-          mensaje: "Alumno no encontrado"
-        }
+          mensaje: "Alumno no encontrado",
+        },
       });
     }
 
-    console.log(`[ALUMNO] ✓ Eliminado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`);
+    console.log(
+      `[ALUMNO] ✓ Eliminado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`,
+    );
 
     res.status(200).json({
       ok: true,
-      mensaje: "Alumno eliminado correctamente"
+      mensaje: "Alumno eliminado correctamente",
     });
   } catch (error) {
-    console.error('[ALUMNO] Error al eliminar:', error);
+    console.error("[ALUMNO] Error al eliminar:", error);
     res.status(500).json({
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error interno del servidor"
-      }
+        mensaje: "Error interno del servidor",
+      },
     });
   }
 };
-

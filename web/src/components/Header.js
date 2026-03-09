@@ -1,21 +1,21 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faPlus, faBars } from '@fortawesome/free-solid-svg-icons';
-import './Header.css';
+import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faPlus, faBars } from "@fortawesome/free-solid-svg-icons";
+import "./Header.css";
 
 const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
   const obtenerTituloSeccion = () => {
     switch (seccionActiva) {
-      case 'overview':
-        return 'Dashboard';
-      case 'asistencias':
-        return 'Asistencias';
-      case 'alumnos':
-        return 'Gestión de Alumnos';
-      case 'reportes':
-        return 'Reportes';
+      case "overview":
+        return "Dashboard";
+      case "asistencias":
+        return "Asistencias";
+      case "alumnos":
+        return "Gestión de Alumnos";
+      case "reportes":
+        return "Reportes";
       default:
-        return 'Dashboard';
+        return "Dashboard";
     }
   };
 
@@ -32,9 +32,9 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input type="text" placeholder="Buscar..." />
         </div>
-        <button 
+        <button
           className="btn-primary"
-          onClick={() => setSeccionActiva('alumnos')}
+          onClick={() => setSeccionActiva("alumnos")}
         >
           <FontAwesomeIcon icon={faPlus} />
           <span>Nuevo Alumno</span>

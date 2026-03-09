@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faArrowUp, faClipboardCheck, faChartBar, faSignOutAlt, faBell, faUserPlus, faCheckCircle, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import io from 'socket.io-client';
+import config, { apiGet } from '../config/api.config';
 import './Overview.css';
-
-const API_URL = 'http://localhost:3000/api/v1';
-const SOCKET_URL = 'http://localhost:3000';
 
 const Overview = () => {
   const [estadisticas, setEstadisticas] = useState({
@@ -36,7 +34,7 @@ const Overview = () => {
 
   // Configurar Socket.IO para actualizaciones en tiempo real
   useEffect(() => {
-    const socket = io(SOCKET_URL);
+    const socket = io(config.socketUrl);
 
     socket.on('connect', () => {
       console.log('[Socket] Dashboard conectado en tiempo real');
@@ -85,8 +83,7 @@ const Overview = () => {
 
   const cargarRegistrosAsistencia = async () => {
     try {
-      const respuesta = await fetch(`${API_URL}/asistencias`);
-      const datos = await respuesta.json();
+      const datos = await apiGet('asistencias');
       
       if (datos.ok) {
         const registros = datos.data;

@@ -45,7 +45,7 @@
   .welcome-message {
     margin-bottom: 1rem;
   }
-  
+
   .welcome-message h2 {
     font-size: 1.4rem;
   }
@@ -564,7 +564,9 @@
   overflow-y: auto;
   max-height: 0;
   padding: 0;
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  transition:
+    max-height 0.3s ease,
+    padding 0.3s ease;
 }
 
 .notifications-panel.expanded .notifications-list {

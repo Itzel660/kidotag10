@@ -37,29 +37,36 @@ web/
 ## 🎨 Cambios Realizados
 
 ### ✅ Convertido a React
+
 - Componentes separados y reutilizables
 - Estado manejado con React Hooks (useState, useEffect)
 - Navegación por secciones dinámica
 
 ### ✅ Sin Emojis
+
 - Todos los emojis fueron reemplazados por iconos de FontAwesome
 - Interfaz más profesional y coherente
 
 ### ✅ Tema Kidotag
+
 **Colores:**
+
 - Morado oscuro principal: `#1a0b2e`
 - Morado secundario: `#2d1b4e`
 - Cyan/verde (acento): `#00d9c0`
 - Verde brillante: `#00ff9d`
 
 **Características:**
+
 - Sin degradados (colores sólidos)
 - Diseño más compacto
 - Logo de Kidotag en sidebar
 - Bordes y espaciados reducidos
 
 ### ✅ FontAwesome Integrado
+
 **Iconos utilizados:**
+
 - `faChartLine` - Overview
 - `faClipboardCheck` - Asistencias
 - `faUsers` - Alumnos
@@ -73,12 +80,14 @@ web/
 ## 🚀 Cómo Ejecutar
 
 ### 1. Instalar dependencias (primera vez)
+
 ```bash
 cd web
 npm install
 ```
 
 ### 2. Iniciar aplicación
+
 ```bash
 npm start
 ```
@@ -86,6 +95,7 @@ npm start
 La app se abrirá en: **http://localhost:3001**
 
 ### 3. Verificar API
+
 Asegúrate de que el API esté corriendo en **http://localhost:3000**
 
 ```bash
@@ -105,16 +115,19 @@ npm start
 ## 🎯 Funcionalidades
 
 ### 1. Dashboard Overview
+
 - 4 tarjetas de estadísticas con iconos
 - Tabla de registros recientes
 - Actualización automática cada 30 segundos
 
 ### 2. Asistencias Diarias
+
 - Filtro por fecha y grupo
 - Estadísticas instantáneas (entradas/salidas/total)
 - Tabla con registros filtrados
 
 ### 3. Gestión de Alumnos
+
 - Formulario de registro completo
 - Lista visual de alumnos registrados
 - Búsqueda en tiempo real
@@ -127,7 +140,7 @@ npm start
 ✅ **Tema oscuro**: Morado como color principal  
 ✅ **Acentos cyan**: Para botones y elementos interactivos  
 ✅ **Responsive**: Se adapta a móviles y tablets  
-✅ **Animaciones suaves**: Transiciones en hover y navegación  
+✅ **Animaciones suaves**: Transiciones en hover y navegación
 
 ## 📱 Responsive Design
 
@@ -138,12 +151,14 @@ npm start
 ## 🔗 Conexión con API
 
 Endpoints utilizados:
+
 - `GET /api/v1/asistencias` - Obtener registros
 - `POST /api/v1/asistencias` - Registrar asistencia
 
 ## 📄 Archivos Respaldados
 
 Los archivos originales fueron renombrados:
+
 - `index.html.old`
 - `styles.css.old`
 - `script.js.old`
