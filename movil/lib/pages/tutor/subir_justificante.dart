@@ -10,6 +10,7 @@ class SubirJustificante extends StatefulWidget {
 }
 
 class _SubirJustificanteState extends State<SubirJustificante> {
+
   final TextEditingController comentarioController = TextEditingController();
 
   DateTime? fechaSeleccionada;
@@ -17,6 +18,7 @@ class _SubirJustificanteState extends State<SubirJustificante> {
   bool isLoading = false;
 
   final ImagePicker picker = ImagePicker();
+
 
   Future<void> seleccionarFecha(BuildContext context) async {
     final DateTime? fecha = await showDatePicker(
@@ -33,6 +35,7 @@ class _SubirJustificanteState extends State<SubirJustificante> {
     }
   }
 
+
   Future<void> tomarFoto() async {
     final XFile? foto = await picker.pickImage(
       source: ImageSource.camera,
@@ -45,6 +48,7 @@ class _SubirJustificanteState extends State<SubirJustificante> {
       });
     }
   }
+
 
   Future<void> elegirGaleria() async {
     final XFile? foto = await picker.pickImage(
@@ -61,10 +65,21 @@ class _SubirJustificanteState extends State<SubirJustificante> {
 
   // Simulación de enviar justificante
   Future<void> enviarJustificante() async {
-    if (fechaSeleccionada == null || imagen == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Seleccione fecha e imagen")),
-      );
+
+    final motivo = comentarioController.text.trim();
+
+    if (fechaSeleccionada == null) {
+      mostrarError("Debe seleccionar la fecha");
+      return;
+    }
+
+    if (motivo.isEmpty) {
+      mostrarError("Debe escribir el motivo de la falta");
+      return;
+    }
+
+    if (imagen == null) {
+      mostrarError("Debe adjuntar una imagen del justificante");
       return;
     }
 
@@ -72,34 +87,48 @@ class _SubirJustificanteState extends State<SubirJustificante> {
       isLoading = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
 
     setState(() {
       isLoading = false;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Justificante enviado correctamente")),
+      const SnackBar(
+        content: Text("Justificante enviado correctamente"),
+        backgroundColor: Colors.green,
+      ),
     );
 
     Navigator.pop(context);
   }
+  void mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: Colors.grey,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Subir Justificante"),
         centerTitle: true,
       ),
 
-      body: Padding(
+      body:
+     Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+
+
             ElevatedButton.icon(
               onPressed: () => seleccionarFecha(context),
               icon: const Icon(Icons.calendar_today),
@@ -121,17 +150,24 @@ class _SubirJustificanteState extends State<SubirJustificante> {
             ),
             const SizedBox(height: 20),
 
+
             if (imagen != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(imagen!, height: 200, fit: BoxFit.cover),
+                child: Image.file(
+                  imagen!,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
               ),
 
             const SizedBox(height: 20),
 
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+
                 ElevatedButton.icon(
                   onPressed: tomarFoto,
                   icon: const Icon(Icons.camera_alt),
@@ -151,11 +187,12 @@ class _SubirJustificanteState extends State<SubirJustificante> {
             isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
-                  onPressed: enviarJustificante,
-                  child: const Text("Enviar Justificante"),
-                ),
+              onPressed: enviarJustificante,
+              child: const Text("Enviar Justificante"),
+            ),
           ],
         ),
+
       ),
     );
   }
