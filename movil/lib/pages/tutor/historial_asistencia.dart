@@ -20,7 +20,7 @@ class _HistorialAsistenciaState extends State<HistorialAsistencia> {
   }
 
   Future<void> cargarHistorial() async {
-    await Future.delayed(const Duration(seconds: 2));
+
 
     setState(() {
       // Datos prueba
@@ -141,7 +141,7 @@ class _HistorialAsistenciaState extends State<HistorialAsistencia> {
 
                     Row(
                       children: [
-                        const Icon(Icons.logout, color: Colors.red),
+                        const Icon(Icons.logout, color: Colors.grey),
                         const SizedBox(width: 8),
                         Text("Salida: ${item["salida"]}"),
                       ],
@@ -149,7 +149,7 @@ class _HistorialAsistenciaState extends State<HistorialAsistencia> {
                   ] else ...[
                     Row(
                       children: const [
-                        Icon(Icons.cancel, color: Colors.red),
+                        Icon(Icons.sentiment_very_dissatisfied, color: Colors.black),
                         SizedBox(width: 8),
                         Text("No asistió"),
                       ],
