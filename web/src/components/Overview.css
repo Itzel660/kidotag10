@@ -121,6 +121,19 @@
   box-shadow: var(--shadow-md);
 }
 
+.group-card.clickable {
+  cursor: pointer;
+}
+
+.ver-perfil-link {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
 .group-card.active {
   border-color: var(--accent-primary);
   background: rgba(0, 217, 192, 0.05);

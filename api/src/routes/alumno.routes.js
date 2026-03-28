@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const alumnoController = require("../controllers/alumno.controller");
-const { verificarToken, verificarAccesoAlumno, filtrarAlumnosPorTutor } = require("../middlewares/auth.middleware");
+const {
+  verificarToken,
+  verificarAccesoAlumno,
+  filtrarAlumnosPorTutor,
+} = require("../middlewares/auth.middleware");
 
 /**
  * @swagger
@@ -73,7 +77,12 @@ router.post("/", verificarToken, alumnoController.registrarAlumno);
  *       401:
  *         description: No autenticado
  */
-router.get("/", verificarToken, filtrarAlumnosPorTutor, alumnoController.listarAlumnos);
+router.get(
+  "/",
+  verificarToken,
+  filtrarAlumnosPorTutor,
+  alumnoController.listarAlumnos,
+);
 
 /**
  * @swagger
@@ -110,7 +119,12 @@ router.get("/", verificarToken, filtrarAlumnosPorTutor, alumnoController.listarA
  *       404:
  *         description: Alumno no encontrado
  */
-router.get("/:id", verificarToken, verificarAccesoAlumno, alumnoController.obtenerAlumno);
+router.get(
+  "/:id",
+  verificarToken,
+  verificarAccesoAlumno,
+  alumnoController.obtenerAlumno,
+);
 
 /**
  * @swagger
@@ -148,7 +162,19 @@ router.get("/:id", verificarToken, verificarAccesoAlumno, alumnoController.obten
  *       404:
  *         description: Alumno no encontrado
  */
-router.put("/:id", verificarToken, verificarAccesoAlumno, alumnoController.actualizarAlumno);
+router.put(
+  "/:id",
+  verificarToken,
+  verificarAccesoAlumno,
+  alumnoController.actualizarAlumno,
+);
+
+router.put(
+  "/:id/perfil",
+  verificarToken,
+  verificarAccesoAlumno,
+  alumnoController.actualizarPerfil,
+);
 
 /**
  * @swagger
@@ -175,6 +201,11 @@ router.put("/:id", verificarToken, verificarAccesoAlumno, alumnoController.actua
  *       404:
  *         description: Alumno no encontrado
  */
-router.delete("/:id", verificarToken, verificarAccesoAlumno, alumnoController.eliminarAlumno);
+router.delete(
+  "/:id",
+  verificarToken,
+  verificarAccesoAlumno,
+  alumnoController.eliminarAlumno,
+);
 
 module.exports = router;

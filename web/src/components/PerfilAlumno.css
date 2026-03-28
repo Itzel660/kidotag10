@@ -1,0 +1,376 @@
+.perfil-container {
+  padding: 20px;
+}
+
+.perfil-sin-datos {
+  text-align: center;
+  color: #888;
+  font-size: 1.1rem;
+  margin-top: 40px;
+}
+
+/* Tabs para seleccionar hijo */
+.perfil-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.perfil-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  background: #fff;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.perfil-tab:hover {
+  border-color: #4a90d9;
+  color: #4a90d9;
+}
+
+.perfil-tab.active {
+  background: #4a90d9;
+  border-color: #4a90d9;
+  color: #fff;
+}
+
+/* Header card */
+.perfil-header-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #4a90d9, #357abd);
+  color: #fff;
+  padding: 24px 30px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.perfil-avatar {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.perfil-header-info {
+  flex: 1;
+}
+
+.perfil-header-info h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.5rem;
+}
+
+.perfil-edad,
+.perfil-grado {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-right: 8px;
+}
+
+.btn-editar-perfil {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-editar-perfil:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.btn-editar-perfil.cancelar {
+  background: rgba(220, 53, 69, 0.7);
+  border-color: rgba(220, 53, 69, 0.9);
+}
+
+/* Secciones */
+.perfil-seccion {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.perfil-seccion h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* Grid de datos (vista) */
+.perfil-datos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dato-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dato-valor {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.dato-valor.sin-datos {
+  color: #bbb;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Listas (alergias, condiciones) */
+.perfil-listas {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lista-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chips */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.alergia-chip {
+  background: #ffe0e0;
+  color: #c0392b;
+}
+
+.condicion-chip {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.chip.vista {
+  cursor: default;
+}
+
+.chip button {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.chip button:hover {
+  opacity: 1;
+}
+
+/* Form grid */
+.perfil-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  border-color: #4a90d9;
+  outline: none;
+}
+
+.campo textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.campo-lista {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo-lista label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.agregar-chip {
+  display: flex;
+  gap: 8px;
+}
+
+.agregar-chip input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.agregar-chip input:focus {
+  border-color: #4a90d9;
+  outline: none;
+}
+
+.agregar-chip button {
+  padding: 6px 16px;
+  background: #4a90d9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.agregar-chip button:hover {
+  background: #357abd;
+}
+
+/* Acciones */
+.perfil-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-guardar-perfil {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-guardar-perfil:hover {
+  background: #219a52;
+}
+
+/* Notas escolares */
+.notas-escolares-texto {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .perfil-header-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .perfil-header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .perfil-form-grid,
+  .perfil-datos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .perfil-tabs {
+    justify-content: center;
+  }
+}

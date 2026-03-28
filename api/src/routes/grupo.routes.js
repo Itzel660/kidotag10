@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const grupoController = require("../controllers/grupo.controller");
+const { verificarToken } = require("../middlewares/auth.middleware");
 
 /**
  * @swagger
@@ -39,7 +40,7 @@ const grupoController = require("../controllers/grupo.controller");
  *       201:
  *         description: Grupo creado exitosamente
  */
-router.post("/", grupoController.crearGrupo);
+router.post("/", verificarToken, grupoController.crearGrupo);
 
 /**
  * @swagger
@@ -51,7 +52,7 @@ router.post("/", grupoController.crearGrupo);
  *       200:
  *         description: Lista de grupos
  */
-router.get("/", grupoController.listarGrupos);
+router.get("/", verificarToken, grupoController.listarGrupos);
 
 /**
  * @swagger
@@ -69,7 +70,7 @@ router.get("/", grupoController.listarGrupos);
  *       200:
  *         description: Datos del grupo
  */
-router.get("/:id", grupoController.obtenerGrupo);
+router.get("/:id", verificarToken, grupoController.obtenerGrupo);
 
 /**
  * @swagger
@@ -107,7 +108,7 @@ router.get("/:id", grupoController.obtenerGrupo);
  *       200:
  *         description: Grupo actualizado
  */
-router.put("/:id", grupoController.actualizarGrupo);
+router.put("/:id", verificarToken, grupoController.actualizarGrupo);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.put("/:id", grupoController.actualizarGrupo);
  *       200:
  *         description: Grupo eliminado
  */
-router.delete("/:id", grupoController.eliminarGrupo);
+router.delete("/:id", verificarToken, grupoController.eliminarGrupo);
 
 /**
  * @swagger
@@ -154,7 +155,7 @@ router.delete("/:id", grupoController.eliminarGrupo);
  *       200:
  *         description: Alumno agregado al grupo
  */
-router.post("/:id/alumnos", grupoController.agregarAlumno);
+router.post("/:id/alumnos", verificarToken, grupoController.agregarAlumno);
 
 /**
  * @swagger
@@ -177,6 +178,10 @@ router.post("/:id/alumnos", grupoController.agregarAlumno);
  *       200:
  *         description: Alumno removido del grupo
  */
-router.delete("/:id/alumnos/:alumnoId", grupoController.removerAlumno);
+router.delete(
+  "/:id/alumnos/:alumnoId",
+  verificarToken,
+  grupoController.removerAlumno,
+);
 
 module.exports = router;

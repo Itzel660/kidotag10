@@ -87,6 +87,50 @@ const options = {
             },
           },
         },
+        Mensaje: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+              description: "ID único del mensaje",
+            },
+            remitente: {
+              type: "object",
+              properties: {
+                _id: { type: "string" },
+                nombre: { type: "string" },
+                email: { type: "string", format: "email" },
+              },
+            },
+            destinatario: {
+              type: "object",
+              properties: {
+                _id: { type: "string" },
+                nombre: { type: "string" },
+                email: { type: "string", format: "email" },
+              },
+            },
+            alumno: {
+              type: "object",
+              properties: {
+                _id: { type: "string" },
+                nombre: { type: "string" },
+                uidTarjeta: { type: "string" },
+              },
+            },
+            tipo: {
+              type: "string",
+              enum: ["inasistencia", "salida_temprana"],
+            },
+            mensaje: { type: "string" },
+            fecha: { type: "string", format: "date-time" },
+            leido: { type: "boolean" },
+            estado: { type: "string", enum: ["pendiente", "aprobado", "rechazado"] },
+            respuesta: { type: "string" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         Tutor: {
           type: "object",
           required: ["nombre", "email", "password"],

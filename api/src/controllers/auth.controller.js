@@ -13,6 +13,130 @@ const generarToken = (id, tipo, email) => {
   });
 };
 
+// Login unificado - auto-detecta por email
+exports.loginUnificado = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          codigo: "DATOS_INVALIDOS",
+          mensaje: "Email y password son requeridos",
+        },
+      });
+    }
+
+    // Buscar primero en profesores
+    let profesor = await Profesor.findOne({ email });
+    if (profesor) {
+      if (!profesor.activo) {
+        return res.status(403).json({
+          ok: false,
+          error: {
+            codigo: "CUENTA_INACTIVA",
+            mensaje: "La cuenta está inactiva",
+          },
+        });
+      }
+
+      const passwordValido = await bcrypt.compare(password, profesor.password);
+      if (!passwordValido) {
+        return res.status(401).json({
+          ok: false,
+          error: {
+            codigo: "CREDENCIALES_INVALIDAS",
+            mensaje: "Email o contraseña incorrectos",
+          },
+        });
+      }
+
+      const token = generarToken(profesor._id, "profesor", profesor.email);
+      console.log(
+        `[AUTH] ✓ Login profesor: ${profesor.nombre} (${profesor.email})`,
+      );
+
+      return res.status(200).json({
+        ok: true,
+        data: {
+          token,
+          tipo: "profesor",
+          usuario: {
+            _id: profesor._id,
+            nombre: profesor.nombre,
+            email: profesor.email,
+            telefono: profesor.telefono,
+            especialidad: profesor.especialidad,
+            esAdmin: profesor.esAdmin || false,
+          },
+        },
+      });
+    }
+
+    // Buscar en tutores
+    const tutor = await Tutor.findOne({ email }).populate(
+      "alumnos",
+      "nombre uidTarjeta",
+    );
+    if (tutor) {
+      if (!tutor.activo) {
+        return res.status(403).json({
+          ok: false,
+          error: {
+            codigo: "CUENTA_INACTIVA",
+            mensaje: "La cuenta está inactiva",
+          },
+        });
+      }
+
+      const passwordValido = await bcrypt.compare(password, tutor.password);
+      if (!passwordValido) {
+        return res.status(401).json({
+          ok: false,
+          error: {
+            codigo: "CREDENCIALES_INVALIDAS",
+            mensaje: "Email o contraseña incorrectos",
+          },
+        });
+      }
+
+      const token = generarToken(tutor._id, "tutor", tutor.email);
+      console.log(`[AUTH] ✓ Login tutor: ${tutor.nombre} (${tutor.email})`);
+
+      return res.status(200).json({
+        ok: true,
+        data: {
+          token,
+          tipo: "tutor",
+          usuario: {
+            _id: tutor._id,
+            nombre: tutor.nombre,
+            email: tutor.email,
+            telefono: tutor.telefono,
+            alumnos: tutor.alumnos,
+          },
+        },
+      });
+    }
+
+    // No encontrado en ninguna colección
+    return res.status(401).json({
+      ok: false,
+      error: {
+        codigo: "CREDENCIALES_INVALIDAS",
+        mensaje: "Email o contraseña incorrectos",
+      },
+    });
+  } catch (error) {
+    console.error("[AUTH] Error en login unificado:", error);
+    res.status(500).json({
+      ok: false,
+      error: { codigo: "ERROR_INTERNO", mensaje: "Error interno del servidor" },
+    });
+  }
+};
+
 // Login para tutores
 exports.loginTutor = async (req, res) => {
   try {
@@ -192,6 +316,7 @@ exports.loginProfesor = async (req, res) => {
           email: profesor.email,
           telefono: profesor.telefono,
           especialidad: profesor.especialidad,
+          esAdmin: profesor.esAdmin || false,
         },
       },
     });

@@ -1,24 +1,24 @@
 /**
  * Configuración de la API
- * 
+ *
  * Este archivo centraliza todas las URLs y configuraciones del API
  */
 
-// Leer variables de entorno (deben empezar con REACT_APP_)
+// Leer variables de entorno de Vite (deben empezar con VITE_)
 const config = {
   // URL base del API REST
-  apiUrl: process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1',
-  
+  apiUrl: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1",
+
   // URL para WebSocket (Socket.IO)
-  socketUrl: process.env.REACT_APP_SOCKET_URL || 'http://localhost:3000',
-  
+  socketUrl: import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
+
   // Timeout para peticiones HTTP (en milisegundos)
   timeout: 30000,
-  
+
   // Headers comunes para todas las peticiones
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
 };
 
@@ -28,7 +28,7 @@ const config = {
  * @returns {string} URL completa
  */
 export const getApiUrl = (endpoint) => {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
   return `${config.apiUrl}/${cleanEndpoint}`;
 };
 
@@ -39,11 +39,11 @@ export const getApiUrl = (endpoint) => {
  */
 export const getAuthHeaders = (token = null) => {
   const headers = { ...config.headers };
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -55,11 +55,11 @@ export const getAuthHeaders = (token = null) => {
  */
 export const apiGet = async (endpoint, token = null) => {
   const response = await fetch(getApiUrl(endpoint), {
-    method: 'GET',
+    method: "GET",
     headers: getAuthHeaders(token),
     signal: AbortSignal.timeout(config.timeout),
   });
-  
+
   return response.json();
 };
 
@@ -72,12 +72,12 @@ export const apiGet = async (endpoint, token = null) => {
  */
 export const apiPost = async (endpoint, data, token = null) => {
   const response = await fetch(getApiUrl(endpoint), {
-    method: 'POST',
+    method: "POST",
     headers: getAuthHeaders(token),
     body: JSON.stringify(data),
     signal: AbortSignal.timeout(config.timeout),
   });
-  
+
   return response.json();
 };
 
@@ -90,12 +90,12 @@ export const apiPost = async (endpoint, data, token = null) => {
  */
 export const apiPut = async (endpoint, data, token = null) => {
   const response = await fetch(getApiUrl(endpoint), {
-    method: 'PUT',
+    method: "PUT",
     headers: getAuthHeaders(token),
     body: JSON.stringify(data),
     signal: AbortSignal.timeout(config.timeout),
   });
-  
+
   return response.json();
 };
 
@@ -107,11 +107,11 @@ export const apiPut = async (endpoint, data, token = null) => {
  */
 export const apiDelete = async (endpoint, token = null) => {
   const response = await fetch(getApiUrl(endpoint), {
-    method: 'DELETE',
+    method: "DELETE",
     headers: getAuthHeaders(token),
     signal: AbortSignal.timeout(config.timeout),
   });
-  
+
   return response.json();
 };
 

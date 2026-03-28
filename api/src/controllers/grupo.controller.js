@@ -62,10 +62,20 @@ exports.crearGrupo = async (req, res) => {
   }
 };
 
-// Listar todos los grupos
+// Listar grupos (admin ve todos, profesor solo los suyos)
 exports.listarGrupos = async (req, res) => {
   try {
-    const grupos = await Grupo.find()
+    let query = {};
+
+    // Si es profesor y no admin, filtrar solo sus grupos
+    if (req.usuario.tipo === "profesor") {
+      const profesor = await Profesor.findById(req.usuario.id);
+      if (!profesor?.esAdmin) {
+        query.profesor = req.usuario.id;
+      }
+    }
+
+    const grupos = await Grupo.find(query)
       .populate("profesor", "nombre email")
       .populate("alumnos", "nombre uidTarjeta")
       .sort({ nombre: 1 })

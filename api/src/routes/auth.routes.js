@@ -64,6 +64,7 @@ const { verificarToken } = require("../middlewares/auth.middleware");
  *       401:
  *         description: Credenciales inválidas
  */
+router.post("/login", authController.loginUnificado);
 router.post("/login/tutor", authController.loginTutor);
 
 /**

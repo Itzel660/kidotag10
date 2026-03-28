@@ -1,0 +1,365 @@
+.mensajes-container {
+  padding: 1rem;
+}
+
+.mensajes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.mensajes-header h2 {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mensajes-header .btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.mensajes-header .btn-primary:hover {
+  background: var(--accent-secondary);
+}
+
+/* Form */
+.mensaje-form-container {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.mensaje-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mensaje-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mensaje-form .form-group label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mensaje-form select,
+.mensaje-form input,
+.mensaje-form textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+}
+
+.mensaje-form textarea {
+  resize: vertical;
+}
+
+.mensaje-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.btn-cancel {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-cancel:hover {
+  background: var(--primary-bg);
+}
+
+/* Lista de mensajes */
+.mensajes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mensajes-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.mensaje-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: box-shadow 0.2s;
+}
+
+.mensaje-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.mensaje-card.no-leido {
+  border-left: 4px solid var(--accent-primary);
+  background: rgba(0, 217, 192, 0.03);
+}
+
+.mensaje-icon {
+  font-size: 1.3rem;
+  color: var(--accent-primary);
+  padding-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.mensaje-card.leido .mensaje-icon {
+  color: var(--text-secondary);
+}
+
+.mensaje-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mensaje-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.mensaje-tipo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.mensaje-tipo.inasistencia {
+  background: rgba(237, 137, 54, 0.15);
+  color: var(--warning-color);
+}
+
+.mensaje-tipo.salida_temprana {
+  background: rgba(72, 187, 120, 0.15);
+  color: var(--success-color);
+}
+
+.mensaje-fecha {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.mensaje-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.mensaje-alumno,
+.mensaje-remitente,
+.mensaje-fecha-evento {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mensaje-texto {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.btn-marcar-leido {
+  flex-shrink: 0;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-marcar-leido:hover {
+  background: var(--accent-secondary);
+}
+
+/* Estado badges */
+.mensaje-estado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.estado-pendiente {
+  background: rgba(237, 137, 54, 0.12);
+  color: var(--warning-color);
+}
+
+.estado-aprobado {
+  background: rgba(72, 187, 120, 0.12);
+  color: var(--success-color);
+}
+
+.estado-rechazado {
+  background: rgba(245, 101, 101, 0.12);
+  color: var(--danger-color);
+}
+
+/* Respuesta del profesor */
+.mensaje-respuesta {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--primary-bg);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Acciones del profesor */
+.mensaje-acciones {
+  margin-top: 0.75rem;
+}
+
+.btn-responder {
+  padding: 0.4rem 1rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-responder:hover {
+  background: var(--accent-secondary);
+}
+
+.respuesta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.respuesta-form input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+}
+
+.respuesta-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-aprobar {
+  padding: 0.4rem 0.8rem;
+  background: var(--success-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: opacity 0.2s;
+}
+
+.btn-aprobar:hover {
+  opacity: 0.85;
+}
+
+.btn-rechazar {
+  padding: 0.4rem 0.8rem;
+  background: var(--danger-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: opacity 0.2s;
+}
+
+.btn-rechazar:hover {
+  opacity: 0.85;
+}
+
+.btn-cancel-sm {
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mensaje-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mensaje-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .mensaje-info {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

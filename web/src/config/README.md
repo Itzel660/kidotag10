@@ -5,65 +5,71 @@ Este módulo centraliza la configuración y las funciones para comunicarse con e
 ## Importación
 
 ```javascript
-import config, { 
-  getApiUrl, 
+import config, {
+  getApiUrl,
   getAuthHeaders,
-  apiGet, 
-  apiPost, 
-  apiPut, 
-  apiDelete 
-} from '../config/api.config';
+  apiGet,
+  apiPost,
+  apiPut,
+  apiDelete,
+} from "../config/api.config";
 ```
 
 ## Funciones Disponibles
 
 ### `apiGet(endpoint, token)`
+
 Realizar petición GET.
 
 ```javascript
-const datos = await apiGet('alumnos');
+const datos = await apiGet("alumnos");
 // GET http://localhost:3000/api/v1/alumnos
 ```
 
 ### `apiPost(endpoint, data, token)`
+
 Realizar petición POST.
 
 ```javascript
-const resultado = await apiPost('alumnos', {
-  nombre: 'Juan Pérez',
-  uidTarjeta: 'UID001'
+const resultado = await apiPost("alumnos", {
+  nombre: "Juan Pérez",
+  uidTarjeta: "UID001",
 });
 ```
 
 ### `apiPut(endpoint, data, token)`
+
 Realizar petición PUT.
 
 ```javascript
-const actualizado = await apiPut('alumnos/123', {
-  nombre: 'Juan Pérez García'
+const actualizado = await apiPut("alumnos/123", {
+  nombre: "Juan Pérez García",
 });
 ```
 
 ### `apiDelete(endpoint, token)`
+
 Realizar petición DELETE.
 
 ```javascript
-const eliminado = await apiDelete('alumnos/123');
+const eliminado = await apiDelete("alumnos/123");
 ```
 
 ### `getApiUrl(endpoint)`
+
 Obtener URL completa.
 
 ```javascript
-const url = getApiUrl('alumnos');
+const url = getApiUrl("alumnos");
 // http://localhost:3000/api/v1/alumnos
 ```
 
 ### `getAuthHeaders(token)`
+
 Obtener headers con autenticación.
 
 ```javascript
-const headers = getAuthHeaders('mi-jwt-token');
+const headers = getAuthHeaders("mi-jwt-token");
 // { 'Content-Type': 'application/json', 'Authorization': 'Bearer mi-jwt-token' }
 ```
 
@@ -79,8 +85,8 @@ REACT_APP_SOCKET_URL=http://localhost:3000
 ## Ejemplo Completo
 
 ```javascript
-import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost, apiDelete } from '../config/api.config';
+import React, { useState, useEffect } from "react";
+import { apiGet, apiPost, apiDelete } from "../config/api.config";
 
 const MiComponente = () => {
   const [items, setItems] = useState([]);
@@ -88,7 +94,7 @@ const MiComponente = () => {
   // Cargar datos
   useEffect(() => {
     const cargar = async () => {
-      const resultado = await apiGet('alumnos');
+      const resultado = await apiGet("alumnos");
       if (resultado.ok) {
         setItems(resultado.data);
       }
@@ -98,9 +104,9 @@ const MiComponente = () => {
 
   // Crear nuevo
   const crear = async (data) => {
-    const resultado = await apiPost('alumnos', data);
+    const resultado = await apiPost("alumnos", data);
     if (resultado.ok) {
-      console.log('Creado:', resultado.data);
+      console.log("Creado:", resultado.data);
     }
   };
 
@@ -108,7 +114,7 @@ const MiComponente = () => {
   const eliminar = async (id) => {
     const resultado = await apiDelete(`alumnos/${id}`);
     if (resultado.ok) {
-      console.log('Eliminado');
+      console.log("Eliminado");
     }
   };
 
@@ -121,8 +127,8 @@ const MiComponente = () => {
 Para usar WebSocket:
 
 ```javascript
-import io from 'socket.io-client';
-import config from '../config/api.config';
+import io from "socket.io-client";
+import config from "../config/api.config";
 
 const socket = io(config.socketUrl);
 ```

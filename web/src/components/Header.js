@@ -1,9 +1,13 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faPlus, faBars } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../context/AuthContext";
 import "./Header.css";
 
 const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
+  const { user } = useAuth();
+  const esProfesor = user?.tipo === "profesor";
+
   const obtenerTituloSeccion = () => {
     switch (seccionActiva) {
       case "overview":
@@ -14,6 +18,14 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
         return "Gestión de Alumnos";
       case "reportes":
         return "Reportes";
+      case "mensajes":
+        return "Mensajes";
+      case "profesores":
+        return "Gestión de Profesores";
+      case "tutores":
+        return "Gestión de Tutores";
+      case "mis-hijos":
+        return "Perfil de Mis Hijos";
       default:
         return "Dashboard";
     }
@@ -32,13 +44,15 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input type="text" placeholder="Buscar..." />
         </div>
-        <button
-          className="btn-primary"
-          onClick={() => setSeccionActiva("alumnos")}
-        >
-          <FontAwesomeIcon icon={faPlus} />
-          <span>Nuevo Alumno</span>
-        </button>
+        {esProfesor && (
+          <button
+            className="btn-primary"
+            onClick={() => setSeccionActiva("alumnos")}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Nuevo Alumno</span>
+          </button>
+        )}
       </div>
     </header>
   );

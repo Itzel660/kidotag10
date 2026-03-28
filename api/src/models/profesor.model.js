@@ -27,6 +27,10 @@ const profesorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    esAdmin: {
+      type: Boolean,
+      default: false,
+    },
     activo: {
       type: Boolean,
       default: true,

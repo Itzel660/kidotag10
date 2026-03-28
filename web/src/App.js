@@ -1,23 +1,52 @@
 import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./components/Login";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Overview from "./components/Overview";
 import Asistencias from "./components/Asistencias";
 import Alumnos from "./components/Alumnos";
+import Mensajes from "./components/Mensajes";
+import Profesores from "./components/Profesores";
+import Tutores from "./components/Tutores";
+import PerfilAlumno from "./components/PerfilAlumno";
 import "./App.css";
 
-function App() {
+function Dashboard() {
   const [seccionActiva, setSeccionActiva] = useState("overview");
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const [alumnoPerfilId, setAlumnoPerfilId] = useState(null);
 
   const renderizarSeccion = () => {
     switch (seccionActiva) {
       case "overview":
-        return <Overview />;
+        return (
+          <Overview
+            onVerPerfil={(id) => {
+              setAlumnoPerfilId(id);
+              setSeccionActiva("mis-hijos");
+            }}
+          />
+        );
       case "asistencias":
         return <Asistencias />;
       case "alumnos":
         return <Alumnos />;
+      case "mensajes":
+        return <Mensajes />;
+      case "profesores":
+        return <Profesores />;
+      case "tutores":
+        return <Tutores />;
+      case "mis-hijos":
+        return <PerfilAlumno alumnoIdInicial={alumnoPerfilId} />;
       default:
         return <Overview />;
     }
@@ -25,7 +54,7 @@ function App() {
 
   const cambiarSeccion = (seccion) => {
     setSeccionActiva(seccion);
-    setSidebarAbierto(false); // Cerrar sidebar en móvil al cambiar sección
+    setSidebarAbierto(false);
   };
 
   return (
@@ -51,6 +80,26 @@ function App() {
         />
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

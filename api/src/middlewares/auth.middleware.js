@@ -110,6 +110,42 @@ exports.esProfesor = async (req, res, next) => {
   }
 };
 
+// Middleware para verificar que el usuario es un admin (profesor con esAdmin)
+exports.esAdmin = async (req, res, next) => {
+  try {
+    if (req.usuario.tipo !== "profesor") {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo los administradores pueden acceder a este recurso",
+        },
+      });
+    }
+
+    const profesor = await Profesor.findById(req.usuario.id);
+    if (!profesor || !profesor.esAdmin) {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo los administradores pueden acceder a este recurso",
+        },
+      });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: {
+        codigo: "ERROR_INTERNO",
+        mensaje: "Error al verificar permisos",
+      },
+    });
+  }
+};
+
 // Middleware para verificar que un tutor solo acceda a sus propios alumnos
 exports.verificarAccesoAlumno = async (req, res, next) => {
   try {

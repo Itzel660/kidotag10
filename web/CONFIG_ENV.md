@@ -1,19 +1,23 @@
-# Configuración de Variables de Entorno - Web App
+# Configuración de Variables de Entorno - Web App (Vite)
 
 ## Variables Disponibles
 
-### `REACT_APP_API_URL`
+### `VITE_API_URL`
+
 URL base del API REST.
 
 **Valores comunes:**
+
 - Desarrollo local: `http://localhost:3000/api/v1`
 - Desarrollo en red local: `http://192.168.X.X:3000/api/v1`
 - Producción: `https://api.kidotag.com/api/v1`
 
-### `REACT_APP_SOCKET_URL`
+### `VITE_SOCKET_URL`
+
 URL para conexiones WebSocket (Socket.IO).
 
 **Valores comunes:**
+
 - Desarrollo local: `http://localhost:3000`
 - Desarrollo en red local: `http://192.168.X.X:3000`
 - Producción: `https://api.kidotag.com`
@@ -34,20 +38,20 @@ Edita `.env` y ajusta las URLs según tu entorno:
 
 ```bash
 # Desarrollo local
-REACT_APP_API_URL=http://localhost:3000/api/v1
-REACT_APP_SOCKET_URL=http://localhost:3000
+VITE_API_URL=http://localhost:3000/api/v1
+VITE_SOCKET_URL=http://localhost:3000
 
 # O desarrollo en red local (para probar desde otros dispositivos)
-REACT_APP_API_URL=http://192.168.1.100:3000/api/v1
-REACT_APP_SOCKET_URL=http://192.168.1.100:3000
+VITE_API_URL=http://192.168.1.100:3000/api/v1
+VITE_SOCKET_URL=http://192.168.1.100:3000
 ```
 
-### 2. Reiniciar el Servidor
+### 2. Reiniciar el Servidor de Desarrollo
 
 Después de cambiar las variables de entorno, reinicia el servidor:
 
 ```bash
-npm start
+npm run dev
 ```
 
 ---
@@ -57,28 +61,31 @@ npm start
 ### Opción 1: Usar helpers de api.config.js (Recomendado)
 
 ```javascript
-import { apiGet, apiPost, apiPut, apiDelete } from '../config/api.config';
+import { apiGet, apiPost, apiPut, apiDelete } from "../config/api.config";
 
 // GET
-const datos = await apiGet('alumnos');
+const datos = await apiGet("alumnos");
 
 // POST
-const resultado = await apiPost('alumnos', { nombre: 'Juan', uidTarjeta: 'UID001' });
+const resultado = await apiPost("alumnos", {
+  nombre: "Juan",
+  uidTarjeta: "UID001",
+});
 
 // PUT
-const actualizado = await apiPut('alumnos/123', { nombre: 'Juan Pérez' });
+const actualizado = await apiPut("alumnos/123", { nombre: "Juan Pérez" });
 
 // DELETE
-const eliminado = await apiDelete('alumnos/123');
+const eliminado = await apiDelete("alumnos/123");
 ```
 
 ### Opción 2: Usar getApiUrl directamente
 
 ```javascript
-import { getApiUrl, getAuthHeaders } from '../config/api.config';
+import { getApiUrl, getAuthHeaders } from "../config/api.config";
 
-const response = await fetch(getApiUrl('alumnos'), {
-  method: 'GET',
+const response = await fetch(getApiUrl("alumnos"), {
+  method: "GET",
   headers: getAuthHeaders(),
 });
 ```
@@ -86,8 +93,8 @@ const response = await fetch(getApiUrl('alumnos'), {
 ### Opción 3: Acceder directamente a las variables
 
 ```javascript
-const apiUrl = process.env.REACT_APP_API_URL;
-const socketUrl = process.env.REACT_APP_SOCKET_URL;
+const apiUrl = import.meta.env.VITE_API_URL;
+const socketUrl = import.meta.env.VITE_SOCKET_URL;
 ```
 
 ---
@@ -97,13 +104,13 @@ const socketUrl = process.env.REACT_APP_SOCKET_URL;
 Para usar Socket.IO con la configuración:
 
 ```javascript
-import io from 'socket.io-client';
-import config from '../config/api.config';
+import io from "socket.io-client";
+import config from "../config/api.config";
 
 const socket = io(config.socketUrl);
 
-socket.on('connect', () => {
-  console.log('Conectado al servidor');
+socket.on("connect", () => {
+  console.log("Conectado al servidor");
 });
 ```
 
@@ -111,28 +118,32 @@ socket.on('connect', () => {
 
 ## Notas Importantes
 
-1. **Prefijo REACT_APP_**: Las variables de entorno en React DEBEN comenzar con `REACT_APP_` para ser accesibles en el cliente.
+1. **Prefijo VITE\_**: Las variables de entorno en Vite DEBEN comenzar con `VITE_` para ser accesibles en el cliente.
 
-2. **Reinicio necesario**: Después de cambiar el `.env`, debes reiniciar el servidor de desarrollo.
+2. **Reinicio necesario**: Después de cambiar el `.env`, debes reiniciar el servidor de desarrollo con `npm run dev`.
 
 3. **No subir .env a Git**: El archivo `.env` está en `.gitignore` y no debe subirse al repositorio.
 
-4. **Variables públicas**: Las variables `REACT_APP_*` son públicas y están incluidas en el bundle del cliente. No pongas información sensible aquí.
+4. **Variables públicas**: Las variables `VITE_*` son públicas y están incluidas en el bundle del cliente. No pongas información sensible aquí.
+
+5. **import.meta.env**: En Vite se usa `import.meta.env.VITE_*` en lugar de `process.env.REACT_APP_*`.
 
 ---
 
-## Troubleshooting
-
-### Error: "process.env.REACT_APP_API_URL is undefined"
+## Troubleshimport.meta.env.VITE_API_URL is undefined"
 
 **Solución:**
-1. Verifica que la variable esté en `.env` con el prefijo `REACT_APP_`
-2. Reinicia el servidor de desarrollo
-3. Verifica que estés importando correctamente el config
+
+1. Verifica que la variable esté en `.env` con el prefijo `VITE_`
+2. Reinicia el servidor de desarrollo con `npm run dev`
+3. Verifica que la variable esté en `.env` con el prefijo `REACT_APP_`
+4. Reinicia el servidor de desarrollo
+5. Verifica que estés importando correctamente el config
 
 ### Error: "CORS error" o "Network error"
 
 **Solución:**
+
 1. Verifica que el backend esté corriendo
 2. Verifica que la URL del API sea correcta
 3. Si usas dispositivo físico, usa la IP local en lugar de localhost
@@ -142,12 +153,12 @@ socket.on('connect', () => {
 ## Ejemplo Completo
 
 **`.env`:**
-```bash
-PORT=3001
-BROWSER=none
+VITE_API_URL=http://localhost:3000/api/v1
+VITEone
 REACT_APP_API_URL=http://localhost:3000/api/v1
 REACT_APP_SOCKET_URL=http://localhost:3000
-```
+
+````
 
 **Componente:**
 ```javascript
@@ -168,13 +179,13 @@ const MiComponente = () => {
         console.error('Error:', error);
       }
     };
-    
+
     cargarDatos();
   }, []);
 
   return <div>{/* Tu UI aquí */}</div>;
 };
-```
+````
 
 ---
 

@@ -2,6 +2,46 @@
   animation: fadeIn 0.3s ease-in;
 }
 
+.alumnos-profile {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.alumnos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.alumnos-subtitle {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+}
+
+.alumnos-search {
+  margin-bottom: 20px;
+}
+
+.alumnos-tabs {
+  margin-bottom: 20px;
+}
+
+.alumnos-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-editar-perfil.danger {
+  background: rgba(220, 53, 69, 0.78);
+  border-color: rgba(220, 53, 69, 0.92);
+}
+
+.btn-editar-perfil.danger:hover {
+  background: rgba(220, 53, 69, 0.92);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -25,6 +65,23 @@
   .section-header h2,
   .section-header h3 {
     font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .alumnos-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .alumnos-header .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .alumnos-header-actions {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -200,6 +257,108 @@
     margin-top: 2rem;
   }
 }
+
+.tutor-asociado .tutor-info-seleccionado,
+.tutor-sugerencias {
+  margin-top: 0.5rem;
+}
+
+.tutor-info-seleccionado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.tutor-info-seleccionado button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+}
+
+.tutor-sugerencias {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.tutor-item {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.tutor-item:last-child {
+  border-bottom: none;
+}
+
+.tutor-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.tutor-item strong,
+.tutor-item span {
+  display: block;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  width: min(95vw, 560px);
+  padding: 1.25rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.modal-content h3 {
+  margin-bottom: 0.85rem;
+}
+
+.modal-content .form-grid {
+  margin-bottom: 1rem;
+}
+
+.modal-content .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.tutor-sugerencias.vacio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.crear-tutor-directo {
+  margin-top: 0.6rem;
+}
+
 
 .students-header .search-box {
   position: relative;

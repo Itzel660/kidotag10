@@ -1,21 +1,82 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine,
   faClipboardCheck,
   faUsers,
   faFileAlt,
+  faSignOutAlt,
+  faEnvelope,
+  faUserTie,
+  faUserFriends,
+  faChild,
 } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
 import logo from "../assets/logo.svg";
 
 const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
-  const itemsMenu = [
-    { id: "overview", etiqueta: "Overview", icono: faChartLine },
-    { id: "asistencias", etiqueta: "Asistencias", icono: faClipboardCheck },
-    { id: "alumnos", etiqueta: "Alumnos", icono: faUsers },
-    { id: "reportes", etiqueta: "Reportes", icono: faFileAlt },
-  ];
+  const { user, logout, mensajesNoLeidos } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const esProfesor = user?.tipo === "profesor";
+  const esAdmin = user?.tipo === "profesor" && user?.esAdmin;
+  const esTutor = user?.tipo === "tutor";
+
+  const getItemsMenu = () => {
+    const items = [
+      { id: "overview", etiqueta: "Overview", icono: faChartLine },
+    ];
+
+    if (esTutor) {
+      items.push({ id: "mis-hijos", etiqueta: "Mis Hijos", icono: faChild });
+    }
+
+    if (esProfesor) {
+      items.push({
+        id: "asistencias",
+        etiqueta: "Asistencias",
+        icono: faClipboardCheck,
+      });
+      items.push({ id: "alumnos", etiqueta: "Alumnos", icono: faUsers });
+    }
+
+    items.push({
+      id: "mensajes",
+      etiqueta: "Mensajes",
+      icono: faEnvelope,
+      badge: mensajesNoLeidos > 0 ? mensajesNoLeidos : null,
+    });
+
+    if (esAdmin) {
+      items.push({
+        id: "profesores",
+        etiqueta: "Profesores",
+        icono: faUserTie,
+      });
+      items.push({ id: "tutores", etiqueta: "Tutores", icono: faUserFriends });
+    }
+
+    if (esProfesor) {
+      items.push({ id: "reportes", etiqueta: "Reportes", icono: faFileAlt });
+    }
+
+    return items;
+  };
+
+  const itemsMenu = getItemsMenu();
+
+  const getRoleLabel = () => {
+    if (esAdmin) return "Administrador";
+    if (esProfesor) return "Profesor";
+    return "Tutor";
+  };
 
   return (
     <aside className={`sidebar ${abierto ? "active" : ""}`}>
@@ -33,6 +94,7 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
           >
             <FontAwesomeIcon icon={item.icono} className="nav-icon" />
             <span>{item.etiqueta}</span>
+            {item.badge && <span className="nav-badge">{item.badge}</span>}
           </button>
         ))}
       </nav>
@@ -42,8 +104,18 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
           <div className="user-avatar">
             <FontAwesomeIcon icon={faUsers} />
           </div>
-          <span className="user-name">Admin</span>
+          <div className="user-details">
+            <span className="user-name">{user?.nombre || "Usuario"}</span>
+            <span className="user-role">{getRoleLabel()}</span>
+          </div>
         </div>
+        <button
+          className="btn-logout"
+          onClick={handleLogout}
+          title="Cerrar sesión"
+        >
+          <FontAwesomeIcon icon={faSignOutAlt} />
+        </button>
       </div>
     </aside>
   );
