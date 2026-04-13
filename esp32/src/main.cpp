@@ -11,6 +11,90 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <ArduinoJson.h>
 
+// Buzzer pin (3-pin buzzer: GND, IO, VCC)
+#define BUZZER_PIN D3  // GPIO0 - libre después del boot
+
+// Notas musicales (frecuencias en Hz)
+#define NOTE_C4  262
+#define NOTE_D4  294
+#define NOTE_E4  330
+#define NOTE_F4  349
+#define NOTE_G4  392
+#define NOTE_A4  440
+#define NOTE_B4  494
+#define NOTE_C5  523
+#define NOTE_D5  587
+#define NOTE_E5  659
+#define NOTE_F5  698
+#define NOTE_G5  784
+#define NOTE_A5  880
+
+void playTone(int frequency, int duration) {
+  tone(BUZZER_PIN, frequency, duration);
+  delay(duration + 30);
+}
+
+// Melodía de inicio exitoso: escala ascendente alegre
+void buzzerInitSuccess() {
+  playTone(NOTE_C4, 100);
+  playTone(NOTE_E4, 100);
+  playTone(NOTE_G4, 100);
+  playTone(NOTE_C5, 200);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía de inicio fallido: tono descendente triste
+void buzzerInitFail() {
+  playTone(NOTE_G4, 200);
+  playTone(NOTE_D4, 200);
+  playTone(NOTE_C4, 400);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: entrada registrada (tono ascendente rápido y positivo)
+void buzzerEntrada() {
+  playTone(NOTE_E4, 80);
+  playTone(NOTE_G4, 80);
+  playTone(NOTE_C5, 150);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: salida registrada (tono descendente suave)
+void buzzerSalida() {
+  playTone(NOTE_C5, 80);
+  playTone(NOTE_G4, 80);
+  playTone(NOTE_E4, 150);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: tag enviado al formulario (doble beep informativo)
+void buzzerTagFormulario() {
+  playTone(NOTE_A4, 100);
+  delay(80);
+  playTone(NOTE_A4, 100);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: tag rechazado por ventana de tiempo (beep corto grave)
+void buzzerTagRechazado() {
+  playTone(NOTE_C4, 80);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: error HTTP o de conexión (tono de error descendente)
+void buzzerError() {
+  playTone(NOTE_E4, 150);
+  playTone(NOTE_C4, 300);
+  noTone(BUZZER_PIN);
+}
+
+// Melodía: éxito genérico
+void buzzerExito() {
+  playTone(NOTE_C5, 100);
+  playTone(NOTE_E5, 150);
+  noTone(BUZZER_PIN);
+}
+
 WiFiClient wifiClient;
 SoftwareSerial SWSerial(D6, D4); // RX=D6 (GPIO12), TX=D4 (GPIO2) for PN532 HSU - pines seguros
 PN532_SWHSU pn532swhsu(SWSerial);
@@ -69,6 +153,9 @@ void setup(void) {
   Serial.begin(74880);
   Serial.println("\n\n=== Sistema Iniciando ===");
   
+  pinMode(BUZZER_PIN, OUTPUT);
+  noTone(BUZZER_PIN);
+  
   display.init();
   drawStatus("Iniciando...", "Sistema", "Arrancando");
   
@@ -81,8 +168,10 @@ void setup(void) {
   if (WiFi.status() == WL_CONNECTED) {
     String ip = WiFi.localIP().toString();
     drawStatus("WiFi OK", ip.c_str(), "Listo");
+    buzzerInitSuccess();
   } else {
     drawStatus("WiFi ERROR", "No conectado", "Revisar config");
+    buzzerInitFail();
   }
   
   drawStatus("NFC PN532", "Iniciando HSU", "D6/D4");
@@ -92,11 +181,13 @@ void setup(void) {
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (!versiondata) {
     drawStatus("NFC ERROR", "PN532 no", "detectado");
+    buzzerInitFail();
     delay(2000);
   } else {
     String fwver = String((versiondata>>16) & 0xFF) + "." + String((versiondata>>8) & 0xFF);
     String nfcMsg = "PN532 v" + fwver;
     drawStatus("NFC OK", nfcMsg.c_str(), "Listo");
+    buzzerInitSuccess();
   }
   
   drawStatus("Sistema Listo", "Esperando", "tarjeta NFC");
@@ -138,21 +229,25 @@ void loop(void) {
         
         if (httpCode == 204) {
           // Sin contenido - tag pasado en ventana de 30 seg o 2 min
-          // Volver rápidamente al estado de espera sin mostrar mensaje
           Serial.println("[INFO] Respuesta 204 - Tag rechazado por ventana de tiempo");
+          buzzerTagRechazado();
           drawStatus("Sistema Listo", "Esperando", "tarjeta NFC");
-          delay(1000); // Delay corto para siguiente lectura
+          delay(1000);
           http.end();
-          return; // Salir del loop para evitar el delay de 5 segundos
+          return;
         } else if (httpCode == 200 || httpCode == 201) {
           // Parsear respuesta JSON
           StaticJsonDocument<512> doc;
           DeserializationError error = deserializeJson(doc, response);
           
-          if (!error) {
-            // Verificar si la respuesta es válida
-            if (doc.containsKey("ok") && doc["ok"] == true && doc.containsKey("data")) {
-              // Extraer datos con verificación
+          if (!error && doc.containsKey("ok") && doc["ok"] == true && doc.containsKey("data")) {
+            // Verificar si es tag enviado al formulario (no registrado)
+            if (doc["data"].containsKey("enviado") && doc["data"]["enviado"] == true) {
+              Serial.println("[INFO] Tag no registrado - enviado al formulario web");
+              buzzerTagFormulario();
+              drawStatus("Tag enviado", "al formulario", uidHex.c_str());
+            } else {
+              // Asistencia normal registrada
               const char* nombrePtr = doc["data"]["nombre"];
               const char* tipoPtr = doc["data"]["tipo"];
               const char* horaPtr = doc["data"]["hora"];
@@ -166,29 +261,17 @@ void loop(void) {
               Serial.println("  Tipo: " + tipo);
               Serial.println("  Hora: " + hora);
               
-              // Mostrar mensaje personalizado
               String tipoMsg = (tipo == "entrada") ? "ENTRADA" : "SALIDA";
-              Serial.println("[DISPLAY] Actualizando pantalla: " + tipoMsg + " | " + nombre + " | " + hora);
+              if (tipo == "entrada") buzzerEntrada(); else buzzerSalida();
               drawStatus(tipoMsg.c_str(), nombre.c_str(), hora.c_str());
-            } else {
-              Serial.println("[WARN] JSON sin estructura esperada");
-              drawStatus("Exito!", uidHex.c_str(), "Registrado");
             }
+          } else if (!error) {
+            buzzerExito();
+            drawStatus("Exito!", uidHex.c_str(), "Registrado");
           } else {
-            // Error al parsear JSON
             Serial.println("[ERROR] Error al parsear JSON: " + String(error.c_str()));
+            buzzerError();
             drawStatus("Error JSON", "Parse error", uidHex.c_str());
-          }
-        } else if (httpCode == 404) {
-          // Tag no registrado
-          StaticJsonDocument<256> doc;
-          DeserializationError error = deserializeJson(doc, response);
-          
-          if (!error && doc.containsKey("error")) {
-            String mensaje = doc["error"]["mensaje"] | "Tag no registrado";
-            drawStatus("ERROR", "Tag sin", "registrar");
-          } else {
-            drawStatus("ERROR", "Tag no", "registrado");
           }
         } else {
           // Intentar obtener mensaje de error del servidor
@@ -197,17 +280,21 @@ void loop(void) {
           
           if (!error && doc.containsKey("error")) {
             String mensaje = doc["error"]["mensaje"] | "Error HTTP";
+            buzzerError();
             drawStatus("Error", mensaje.c_str(), String(httpCode).c_str());
           } else {
+            buzzerError();
             drawStatus("Error HTTP", String(httpCode).c_str(), uidHex.c_str());
           }
         }
       } else {
-        drawStatus("Error envio", "No conectado", uidHex.c_str());
+        buzzerError();
+      drawStatus("Error envio", "No conectado", uidHex.c_str());
       }
       
       http.end();
     } else {
+      buzzerError();
       drawStatus("Sin WiFi", uidHex.c_str(), "No enviado");
     }
     

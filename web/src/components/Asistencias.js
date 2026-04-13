@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilter, faCalendar } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFilter,
+  faCalendar,
+  faInfoCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import io from "socket.io-client";
+import { useAuth } from "../context/AuthContext";
+import { apiGet } from "../config/api.config";
+import config from "../config/api.config";
 import "./Asistencias.css";
 
-const API_URL = "https://kidotag10.vercel.app/api/v1";
-const SOCKET_URL = "https://kidotag10.vercel.app";
-
 const Asistencias = () => {
+  const { token, user } = useAuth();
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [grupoFiltro, setGrupoFiltro] = useState("");
+  const [grupos, setGrupos] = useState([]);
   const [registros, setRegistros] = useState([]);
+  const [cargando, setCargando] = useState(true);
   const [estadisticasFiltradas, setEstadisticasFiltradas] = useState({
     entradas: 0,
     salidas: 0,
@@ -20,17 +27,33 @@ const Asistencias = () => {
   useEffect(() => {
     const hoy = new Date().toISOString().split("T")[0];
     setFechaFiltro(hoy);
+    cargarGrupos();
   }, []);
 
   useEffect(() => {
     if (fechaFiltro) {
       manejarFiltro();
     }
-  }, [fechaFiltro]);
+  }, [fechaFiltro, grupoFiltro]);
+
+  const cargarGrupos = async () => {
+    try {
+      const datos = await apiGet("grupos", token);
+      if (datos.ok) {
+        setGrupos(datos.data);
+        // Si es profesor (no admin) y tiene un solo grupo, seleccionarlo automáticamente
+        if (user?.tipo === "profesor" && !user?.esAdmin && datos.data.length === 1) {
+          setGrupoFiltro(datos.data[0]._id);
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar grupos:", error);
+    }
+  };
 
   // Configurar Socket.IO para actualizaciones en tiempo real
   useEffect(() => {
-    const socket = io(SOCKET_URL);
+    const socket = io(config.socketUrl);
 
     socket.on("connect", () => {
       console.log("[Socket] Conectado al servidor en tiempo real");
@@ -73,19 +96,16 @@ const Asistencias = () => {
       return;
     }
 
+    setCargando(true);
     try {
-      console.log("[Asistencias] Filtrando por fecha:", fechaFiltro);
-      // Enviar fecha como parámetro al servidor para filtrado eficiente
-      const respuesta = await fetch(
-        `${API_URL}/asistencias?fecha=${fechaFiltro}`,
-      );
-      const datos = await respuesta.json();
+      let endpoint = `asistencias?fecha=${fechaFiltro}`;
+      if (grupoFiltro) {
+        endpoint += `&grupo=${grupoFiltro}`;
+      }
 
-      console.log("[Asistencias] Respuesta recibida:", datos);
+      const datos = await apiGet(endpoint, token);
 
       if (datos.ok) {
-        console.log("[Asistencias] Total registros:", datos.data.length);
-        // Los datos ya vienen filtrados del servidor
         const entradas = datos.data.filter((r) => r.tipo === "entrada").length;
         const salidas = datos.data.filter((r) => r.tipo === "salida").length;
 
@@ -102,6 +122,7 @@ const Asistencias = () => {
     } catch (error) {
       console.error("Error al filtrar asistencias:", error);
     }
+    setCargando(false);
   };
 
   const formatearFechaHora = (cadenaFecha) => {
@@ -115,10 +136,19 @@ const Asistencias = () => {
     };
   };
 
+  const esAdmin = user?.tipo === "profesor" && user?.esAdmin;
+  const esProfesor = user?.tipo === "profesor" && !user?.esAdmin;
+
   return (
     <div className="asistencias">
       <div className="section-header">
-        <h2>Asistencias Diarias por Grupo</h2>
+        <h2>
+          {esAdmin
+            ? "Asistencias Diarias — Todos los Grupos"
+            : esProfesor
+              ? "Asistencias Diarias — Mi Grupo"
+              : "Asistencias Diarias"}
+        </h2>
         <div className="filter-controls">
           <div className="input-group">
             <FontAwesomeIcon icon={faCalendar} className="input-icon" />
@@ -129,16 +159,25 @@ const Asistencias = () => {
               className="input-field"
             />
           </div>
-          <select
-            value={grupoFiltro}
-            onChange={(e) => setGrupoFiltro(e.target.value)}
-            className="input-field"
-          >
-            <option value="">Todos los grupos</option>
-            <option value="A">Grupo A</option>
-            <option value="B">Grupo B</option>
-            <option value="C">Grupo C</option>
-          </select>
+          {(esAdmin || (esProfesor && grupos.length > 1)) && (
+            <select
+              value={grupoFiltro}
+              onChange={(e) => setGrupoFiltro(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Todos los grupos</option>
+              {grupos.map((grupo) => (
+                <option key={grupo._id} value={grupo._id}>
+                  {grupo.nombre}
+                </option>
+              ))}
+            </select>
+          )}
+          {esProfesor && grupos.length === 1 && (
+            <span className="grupo-badge-inline">
+              {grupos[0].nombre}
+            </span>
+          )}
           <button onClick={manejarFiltro} className="btn-filter">
             <FontAwesomeIcon icon={faFilter} />
             <span>Filtrar</span>
@@ -178,7 +217,9 @@ const Asistencias = () => {
             {registros.length === 0 ? (
               <tr>
                 <td colSpan="5" className="loading">
-                  Selecciona fecha y filtra para ver registros
+                  {fechaFiltro
+                    ? "No hay registros para esta fecha"
+                    : "Selecciona fecha y filtra para ver registros"}
                 </td>
               </tr>
             ) : (

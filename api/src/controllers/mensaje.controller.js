@@ -286,6 +286,61 @@ exports.responderMensaje = async (req, res) => {
   }
 };
 
+// Eliminar mensaje (solo profesores)
+exports.eliminarMensaje = async (req, res) => {
+  try {
+    const { id: mensajeId } = req.params;
+    const { id: usuarioId, tipo } = req.usuario;
+
+    if (tipo !== "profesor") {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo profesores pueden eliminar mensajes",
+        },
+      });
+    }
+
+    const mensaje = await Mensaje.findById(mensajeId);
+    if (!mensaje) {
+      return res.status(404).json({
+        ok: false,
+        error: {
+          codigo: "MENSAJE_NO_ENCONTRADO",
+          mensaje: "Mensaje no encontrado",
+        },
+      });
+    }
+
+    const Profesor = require("../models/profesor.model");
+    const profesor = await Profesor.findById(usuarioId);
+    const esDestinatario = mensaje.destinatario.toString() === usuarioId;
+    const esAdmin = profesor && profesor.esAdmin;
+
+    if (!esDestinatario && !esAdmin) {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "No tienes permiso para eliminar este mensaje",
+        },
+      });
+    }
+
+    await Mensaje.findByIdAndDelete(mensajeId);
+    console.log(`[MENSAJES] ✓ Mensaje eliminado: ${mensajeId}`);
+
+    res.status(200).json({ ok: true, data: { _id: mensajeId } });
+  } catch (error) {
+    console.error("[MENSAJES] Error al eliminar mensaje:", error);
+    res.status(500).json({
+      ok: false,
+      error: { codigo: "ERROR_INTERNO", mensaje: "Error interno del servidor" },
+    });
+  }
+};
+
 // Contar mensajes no leídos (para polling)
 exports.contarNoLeidos = async (req, res) => {
   try {

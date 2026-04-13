@@ -1,5 +1,6 @@
 const Asistencia = require("../models/asistencia.model");
 const Alumno = require("../models/alumno.model");
+const Grupo = require("../models/grupo.model");
 
 // Registrar evento de entrada/salida
 exports.registrarAsistencia = async (req, res) => {
@@ -21,12 +22,20 @@ exports.registrarAsistencia = async (req, res) => {
     // Buscar alumno asociado al tag
     const alumno = await Alumno.findOne({ uidTarjeta });
     if (!alumno) {
-      console.log(`[ASISTENCIA] Error: Tag ${uidTarjeta} no está registrado`);
-      return res.status(404).json({
-        ok: false,
-        error: {
-          codigo: "TAG_NO_REGISTRADO",
-          mensaje: "El tag no está asociado a ningún alumno",
+      // Tag no registrado: emitir al frontend para captura en formularios
+      const io = req.app.get("io");
+      if (io) {
+        io.emit("tag-leido", { uidTarjeta });
+        console.log(`[SOCKET] Evento 'tag-leido' emitido (no registrado): ${uidTarjeta}`);
+      }
+
+      console.log(`[ASISTENCIA] Tag ${uidTarjeta} no registrado - enviado al frontend`);
+      return res.status(200).json({
+        ok: true,
+        data: {
+          enviado: true,
+          mensaje: "Tag enviado al formulario",
+          uidTarjeta,
         },
       });
     }
@@ -95,8 +104,8 @@ exports.registrarAsistencia = async (req, res) => {
     );
 
     // Emitir evento de Socket.IO para actualización en tiempo real
-    const io = req.app.get("io");
-    if (io) {
+    const ioSocket = req.app.get("io");
+    if (ioSocket) {
       const eventoAsistencia = {
         _id: asistencia._id,
         uidTarjeta: asistencia.uidTarjeta,
@@ -104,7 +113,9 @@ exports.registrarAsistencia = async (req, res) => {
         tipo: asistencia.tipo,
         fechaHora: asistencia.fechaHora.toISOString(),
       };
-      io.emit("nueva-asistencia", eventoAsistencia);
+      ioSocket.emit("nueva-asistencia", eventoAsistencia);
+      // Notificar al frontend que este tag ya está registrado
+      ioSocket.emit("tag-ya-registrado", { uidTarjeta, nombre: alumno.nombre });
       console.log(
         `[SOCKET] Evento 'nueva-asistencia' emitido para ${alumno.nombre}`,
       );
@@ -134,7 +145,7 @@ exports.registrarAsistencia = async (req, res) => {
 // Listar asistencias (opcionalmente filtrar por uidTarjeta y/o fecha)
 exports.listarAsistencias = async (req, res) => {
   try {
-    const { uidTarjeta, fecha } = req.query;
+    const { uidTarjeta, fecha, grupo } = req.query;
 
     if (
       Object.prototype.hasOwnProperty.call(req.query, "uidTarjeta") &&
@@ -178,6 +189,33 @@ exports.listarAsistencias = async (req, res) => {
       } else {
         // Si no hay filtro de uidTarjeta, filtrar por los UIDs permitidos
         filtro.uidTarjeta = { $in: uidsPermitidos };
+      }
+    }
+
+    // Filtrar por grupo si se proporciona
+    if (grupo) {
+      const grupoDoc = await Grupo.findById(grupo).select("alumnos").lean();
+      if (grupoDoc && grupoDoc.alumnos.length > 0) {
+        const alumnosGrupo = await Alumno.find({
+          _id: { $in: grupoDoc.alumnos },
+        })
+          .select("uidTarjeta")
+          .lean();
+        const uidsGrupo = alumnosGrupo.map((a) => a.uidTarjeta);
+
+        if (filtro.uidTarjeta && filtro.uidTarjeta.$in) {
+          // Intersectar con filtro existente de tutor
+          filtro.uidTarjeta = {
+            $in: uidsGrupo.filter((uid) =>
+              filtro.uidTarjeta.$in.includes(uid),
+            ),
+          };
+        } else if (!filtro.uidTarjeta) {
+          filtro.uidTarjeta = { $in: uidsGrupo };
+        }
+      } else {
+        // Grupo vacío o no encontrado, no hay resultados
+        return res.status(200).json({ ok: true, data: [] });
       }
     }
 

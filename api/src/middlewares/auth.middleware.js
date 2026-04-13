@@ -104,7 +104,7 @@ exports.esProfesor = async (req, res, next) => {
       ok: false,
       error: {
         codigo: "ERROR_INTERNO",
-        mensaje: "Error al verificar permisos",
+        mensaje: "Error al verificar el rol del profesor",
       },
     });
   }
@@ -204,8 +204,24 @@ exports.verificarAccesoAlumno = async (req, res, next) => {
 // Middleware para filtrar alumnos según el tutor
 exports.filtrarAlumnosPorTutor = async (req, res, next) => {
   try {
-    // Si es profesor, permitir ver todos los alumnos
+    // Si es profesor admin, permitir ver todos los alumnos
     if (req.usuario.tipo === "profesor") {
+      const profesor = await Profesor.findById(req.usuario.id);
+      if (profesor?.esAdmin) {
+        return next();
+      }
+
+      // Profesor no-admin: filtrar por alumnos de sus grupos
+      const Grupo = require("../models/grupo.model");
+      const gruposProfesor = await Grupo.find({ profesor: req.usuario.id })
+        .select("alumnos")
+        .lean();
+
+      const alumnoIds = gruposProfesor.flatMap((g) =>
+        g.alumnos.map((a) => a.toString()),
+      );
+
+      req.alumnosPermitidos = alumnoIds;
       return next();
     }
 

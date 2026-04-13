@@ -1,5 +1,6 @@
 const Profesor = require("../models/profesor.model");
 const Grupo = require("../models/grupo.model");
+const Alumno = require("../models/alumno.model");
 
 // Registrar un nuevo profesor
 exports.registrarProfesor = async (req, res) => {
@@ -222,6 +223,96 @@ exports.obtenerGruposProfesor = async (req, res) => {
     });
   } catch (error) {
     console.error("[PROFESOR] Error al obtener grupos:", error);
+    res.status(500).json({
+      ok: false,
+      error: {
+        codigo: "ERROR_INTERNO",
+        mensaje: "Error interno del servidor",
+      },
+    });
+  }
+};
+
+// Obtener los alumnos de un grupo filtrados por el profesor logueado
+exports.obtenerAlumnosPorGrupo = async (req, res) => {
+  try {
+    const profesorId = req.user.id; // Suponiendo que el ID del profesor logueado está en req.user
+
+    // Obtener los grupos del profesor logueado
+    const grupos = await Grupo.find({ profesor: profesorId }).populate("alumnos").lean();
+
+    if (!grupos || grupos.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        error: {
+          codigo: "GRUPOS_NO_ENCONTRADOS",
+          mensaje: "No se encontraron grupos para este profesor",
+        },
+      });
+    }
+
+    // Extraer los alumnos de los grupos
+    const alumnos = grupos.flatMap((grupo) => grupo.alumnos);
+
+    res.status(200).json({
+      ok: true,
+      data: alumnos,
+    });
+  } catch (error) {
+    console.error("[PROFESOR] Error al obtener alumnos por grupo:", error);
+    res.status(500).json({
+      ok: false,
+      error: {
+        codigo: "ERROR_INTERNO",
+        mensaje: "Error interno del servidor",
+      },
+    });
+  }
+};
+
+// Registrar un nuevo alumno por un profesor
+exports.registrarAlumno = async (req, res) => {
+  try {
+    const profesorId = req.usuario.id; // ID del profesor logueado
+    const { nombre, email, grupoId } = req.body;
+
+    if (!nombre || !email || !grupoId) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          codigo: "DATOS_INVALIDOS",
+          mensaje: "Nombre, email y grupoId son requeridos",
+        },
+      });
+    }
+
+    // Verificar si el grupo pertenece al profesor logueado
+    const grupo = await Grupo.findOne({ _id: grupoId, profesor: profesorId });
+
+    if (!grupo) {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "No tienes permiso para registrar alumnos en este grupo",
+        },
+      });
+    }
+
+    // Crear y guardar el nuevo alumno
+    const alumno = new Alumno({
+      nombre,
+      email,
+      grupo: grupoId,
+    });
+    await alumno.save();
+
+    res.status(201).json({
+      ok: true,
+      data: alumno,
+    });
+  } catch (error) {
+    console.error("[PROFESOR] Error al registrar alumno:", error);
     res.status(500).json({
       ok: false,
       error: {

@@ -57,10 +57,6 @@ const alumnoSchema = new mongoose.Schema(
       default: null,
     },
     // Información escolar
-    grado: {
-      type: String,
-      trim: true,
-    },
     notasEscolares: {
       type: String,
       maxlength: 1000,

@@ -39,21 +39,6 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
         </button>
         <h1 className="page-title">{obtenerTituloSeccion()}</h1>
       </div>
-      <div className="header-actions">
-        <div className="search-box">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
-          <input type="text" placeholder="Buscar..." />
-        </div>
-        {esProfesor && (
-          <button
-            className="btn-primary"
-            onClick={() => setSeccionActiva("alumnos")}
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            <span>Nuevo Alumno</span>
-          </button>
-        )}
-      </div>
     </header>
   );
 };

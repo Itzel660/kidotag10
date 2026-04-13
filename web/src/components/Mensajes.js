@@ -10,8 +10,9 @@ import {
   faCheckCircle,
   faTimesCircle,
   faClock,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import { apiGet, apiPost, apiPut } from "../config/api.config";
+import { apiGet, apiPost, apiPut, apiDelete } from "../config/api.config";
 import { useAuth } from "../context/AuthContext";
 import "./Mensajes.css";
 
@@ -34,6 +35,7 @@ const Mensajes = () => {
   const [enviando, setEnviando] = useState(false);
   const [respondiendo, setRespondiendo] = useState(null);
   const [respuestaTexto, setRespuestaTexto] = useState("");
+  const [eliminando, setEliminando] = useState(null);
 
   useEffect(() => {
     cargarMensajes();
@@ -387,6 +389,49 @@ const Mensajes = () => {
                         <strong>Tu respuesta:</strong> {msg.respuesta}
                       </div>
                     )}
+
+                  {/* Botón eliminar para profesor */}
+                  {esProfesor && (
+                    <div className="mensaje-eliminar">
+                      {eliminando === msg._id ? (
+                        <div className="confirmar-eliminar">
+                          <span>¿Eliminar este mensaje?</span>
+                          <button
+                            className="btn-confirmar-eliminar"
+                            onClick={async () => {
+                              try {
+                                const datos = await apiDelete(`mensajes/${msg._id}`, token);
+                                if (datos.ok) {
+                                  setMensajes((prev) => prev.filter((m) => m._id !== msg._id));
+                                } else {
+                                  alert(datos.error?.mensaje || "Error al eliminar");
+                                }
+                              } catch (error) {
+                                console.error("Error al eliminar mensaje:", error);
+                              }
+                              setEliminando(null);
+                            }}
+                          >
+                            Sí, eliminar
+                          </button>
+                          <button
+                            className="btn-cancel-sm"
+                            onClick={() => setEliminando(null)}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="btn-eliminar"
+                          onClick={() => setEliminando(msg._id)}
+                          title="Eliminar mensaje"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );

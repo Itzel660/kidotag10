@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const profesorController = require("../controllers/profesor.controller");
+const { verificarToken, esProfesor } = require("../middlewares/auth.middleware");
 
 /**
  * @swagger
@@ -139,5 +140,11 @@ router.delete("/:id", profesorController.eliminarProfesor);
  *         description: Grupos del profesor
  */
 router.get("/:id/grupos", profesorController.obtenerGruposProfesor);
+
+// Route to get students of groups filtered by the logged-in professor
+router.get("/grupos/alumnos", profesorController.obtenerAlumnosPorGrupo);
+
+// Route to register a new student by a professor
+router.post("/alumnos", verificarToken, esProfesor, profesorController.registrarAlumno);
 
 module.exports = router;

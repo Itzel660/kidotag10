@@ -11,6 +11,8 @@ import {
   faUserTie,
   faUserFriends,
   faChild,
+  faCogs,
+  faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
@@ -45,6 +47,7 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
         icono: faClipboardCheck,
       });
       items.push({ id: "alumnos", etiqueta: "Alumnos", icono: faUsers });
+      items.push({ id: "grupos", etiqueta: "Grupos", icono: faLayerGroup });
     }
 
     items.push({
@@ -61,6 +64,11 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
         icono: faUserTie,
       });
       items.push({ id: "tutores", etiqueta: "Tutores", icono: faUserFriends });
+      items.push({
+        id: "gestion-avanzada",
+        etiqueta: "Gestión Avanzada",
+        icono: faCogs,
+      });
     }
 
     if (esProfesor) {

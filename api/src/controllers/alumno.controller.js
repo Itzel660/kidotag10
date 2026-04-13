@@ -1,5 +1,6 @@
 const Alumno = require("../models/alumno.model");
 const Tutor = require("../models/tutor.model");
+const Grupo = require("../models/grupo.model");
 
 // Busca un alumno por uidTarjeta (uso interno)
 exports.buscarAlumnoPorTag = async (uidTarjeta) => {
@@ -9,7 +10,8 @@ exports.buscarAlumnoPorTag = async (uidTarjeta) => {
 // Registrar un nuevo alumno
 exports.registrarAlumno = async (req, res) => {
   try {
-    const { nombre, uidTarjeta, fechaNacimiento, genero, grado, tutor } = req.body;
+    const { nombre, uidTarjeta, fechaNacimiento, genero, tutor, grupo } =
+      req.body;
 
     if (!nombre || !uidTarjeta) {
       return res.status(400).json({
@@ -36,7 +38,6 @@ exports.registrarAlumno = async (req, res) => {
     const datosAlumno = { nombre, uidTarjeta };
     if (fechaNacimiento) datosAlumno.fechaNacimiento = fechaNacimiento;
     if (genero) datosAlumno.genero = genero;
-    if (grado) datosAlumno.grado = grado;
 
     if (tutor) {
       const tutorExistente = await Tutor.findById(tutor);
@@ -57,6 +58,13 @@ exports.registrarAlumno = async (req, res) => {
 
     if (tutor) {
       await Tutor.findByIdAndUpdate(tutor, {
+        $addToSet: { alumnos: alumno._id },
+      });
+    }
+
+    // Agregar alumno al grupo si se proporcionó
+    if (grupo) {
+      await Grupo.findByIdAndUpdate(grupo, {
         $addToSet: { alumnos: alumno._id },
       });
     }
@@ -94,9 +102,19 @@ exports.listarAlumnos = async (req, res) => {
       .sort({ nombre: 1 })
       .lean();
 
+    // Obtener el grupo de cada alumno
+    const alumnosConGrupo = await Promise.all(
+      alumnos.map(async (alumno) => {
+        const grupo = await Grupo.findOne({ alumnos: alumno._id })
+          .select("_id nombre")
+          .lean();
+        return { ...alumno, grupo: grupo || null };
+      }),
+    );
+
     res.status(200).json({
       ok: true,
-      data: alumnos,
+      data: alumnosConGrupo,
     });
   } catch (error) {
     console.error("[ALUMNO] Error al listar:", error);
@@ -128,9 +146,14 @@ exports.obtenerAlumno = async (req, res) => {
       });
     }
 
+    // Obtener grupo del alumno
+    const grupoAlumno = await Grupo.findOne({ alumnos: id })
+      .select("_id nombre")
+      .lean();
+
     res.status(200).json({
       ok: true,
-      data: alumno,
+      data: { ...alumno, grupo: grupoAlumno || null },
     });
   } catch (error) {
     console.error("[ALUMNO] Error al obtener:", error);
@@ -148,9 +171,17 @@ exports.obtenerAlumno = async (req, res) => {
 exports.actualizarAlumno = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, uidTarjeta, fechaNacimiento, genero, grado, tutor } = req.body;
+    const { nombre, uidTarjeta, fechaNacimiento, genero, tutor, grupo } =
+      req.body;
 
-    if (!nombre && !uidTarjeta && !fechaNacimiento && !genero && !grado && !tutor) {
+    if (
+      !nombre &&
+      !uidTarjeta &&
+      !fechaNacimiento &&
+      !genero &&
+      !tutor &&
+      grupo === undefined
+    ) {
       return res.status(400).json({
         ok: false,
         error: {
@@ -190,7 +221,6 @@ exports.actualizarAlumno = async (req, res) => {
     if (uidTarjeta) actualizacion.uidTarjeta = uidTarjeta;
     if (fechaNacimiento) actualizacion.fechaNacimiento = fechaNacimiento;
     if (genero) actualizacion.genero = genero;
-    if (grado) actualizacion.grado = grado;
 
     if (tutor !== undefined) {
       if (tutor) {
@@ -208,13 +238,35 @@ exports.actualizarAlumno = async (req, res) => {
       actualizacion.tutor = tutor || null;
 
       // actualizar relación tutor <-> alumno
-      if (alumnoActualizado.tutor && alumnoActualizado.tutor.toString() !== tutor) {
+      if (
+        alumnoActualizado.tutor &&
+        alumnoActualizado.tutor.toString() !== tutor
+      ) {
         await Tutor.findByIdAndUpdate(alumnoActualizado.tutor, {
           $pull: { alumnos: id },
         });
       }
-      if (tutor && (!alumnoActualizado.tutor || alumnoActualizado.tutor.toString() !== tutor)) {
+      if (
+        tutor &&
+        (!alumnoActualizado.tutor ||
+          alumnoActualizado.tutor.toString() !== tutor)
+      ) {
         await Tutor.findByIdAndUpdate(tutor, {
+          $addToSet: { alumnos: id },
+        });
+      }
+    }
+
+    // Actualizar grupo del alumno
+    if (grupo !== undefined) {
+      // Remover alumno de todos los grupos actuales
+      await Grupo.updateMany(
+        { alumnos: id },
+        { $pull: { alumnos: id } },
+      );
+      // Agregar al nuevo grupo si se proporcionó
+      if (grupo) {
+        await Grupo.findByIdAndUpdate(grupo, {
           $addToSet: { alumnos: id },
         });
       }
@@ -276,6 +328,8 @@ exports.actualizarPerfil = async (req, res) => {
           "notasEscolares",
         ]
       : [
+          "nombre",
+          "uidTarjeta",
           "fechaNacimiento",
           "genero",
           "alergias",
@@ -284,14 +338,20 @@ exports.actualizarPerfil = async (req, res) => {
           "peso",
           "estatura",
           "contactoEmergencia",
-          "grado",
+          "tutor",
           "notasEscolares",
         ];
 
     const actualizacion = {};
+    const camposEnum = ["genero", "tipoSangre"];
     for (const campo of camposPermitidos) {
       if (req.body[campo] !== undefined) {
-        actualizacion[campo] = req.body[campo];
+        // Para campos enum, un string vacío debe eliminarse en vez de enviarse
+        if (camposEnum.includes(campo) && req.body[campo] === "") {
+          actualizacion[campo] = undefined;
+        } else {
+          actualizacion[campo] = req.body[campo];
+        }
       }
     }
 
@@ -304,6 +364,58 @@ exports.actualizarPerfil = async (req, res) => {
             "Debe proporcionar al menos un campo del perfil para actualizar",
         },
       });
+    }
+
+    // Si se actualiza el UID, verificar que no esté duplicado
+    if (actualizacion.uidTarjeta) {
+      const existente = await Alumno.findOne({
+        uidTarjeta: actualizacion.uidTarjeta,
+        _id: { $ne: id },
+      });
+      if (existente) {
+        return res.status(409).json({
+          ok: false,
+          error: {
+            codigo: "UID_DUPLICADO",
+            mensaje: "Este UID ya está registrado para otro alumno",
+          },
+        });
+      }
+    }
+
+    // Si se actualiza el tutor, manejar relaciones
+    if (actualizacion.tutor !== undefined) {
+      const alumnoActual = await Alumno.findById(id);
+      if (actualizacion.tutor) {
+        const tutorExistente = await Tutor.findById(actualizacion.tutor);
+        if (!tutorExistente) {
+          return res.status(404).json({
+            ok: false,
+            error: {
+              codigo: "TUTOR_NO_ENCONTRADO",
+              mensaje: "Tutor asociado no encontrado",
+            },
+          });
+        }
+      }
+      if (
+        alumnoActual.tutor &&
+        alumnoActual.tutor.toString() !== actualizacion.tutor
+      ) {
+        await Tutor.findByIdAndUpdate(alumnoActual.tutor, {
+          $pull: { alumnos: id },
+        });
+      }
+      if (
+        actualizacion.tutor &&
+        (!alumnoActual.tutor ||
+          alumnoActual.tutor.toString() !== actualizacion.tutor)
+      ) {
+        await Tutor.findByIdAndUpdate(actualizacion.tutor, {
+          $addToSet: { alumnos: id },
+        });
+      }
+      if (!actualizacion.tutor) actualizacion.tutor = null;
     }
 
     const alumno = await Alumno.findByIdAndUpdate(

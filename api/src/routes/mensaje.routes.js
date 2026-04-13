@@ -182,4 +182,6 @@ router.put("/:id/leer", mensajeController.marcarLeido);
  */
 router.put("/:id/responder", mensajeController.responderMensaje);
 
+router.delete("/:id", mensajeController.eliminarMensaje);
+
 module.exports = router;

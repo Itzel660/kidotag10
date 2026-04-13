@@ -2,16 +2,18 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
-  faArrowUp,
   faClipboardCheck,
-  faChartBar,
   faSignOutAlt,
   faBell,
-  faUserPlus,
   faCheckCircle,
   faChevronDown,
   faChevronUp,
   faEnvelope,
+  faUserGraduate,
+  faChalkboardTeacher,
+  faClock,
+  faIdCard,
+  faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import io from "socket.io-client";
 import config, { apiGet } from "../config/api.config";
@@ -21,27 +23,33 @@ import "./Overview.css";
 const Overview = ({ onVerPerfil }) => {
   const { user, token, mensajesNoLeidos } = useAuth();
   const esProfesor = user?.tipo === "profesor";
+  const esAdmin = user?.tipo === "profesor" && user?.esAdmin;
   const esTutor = user?.tipo === "tutor";
 
   const [estadisticas, setEstadisticas] = useState({
-    totalRegistros: 0,
+    totalAlumnos: 0,
+    totalGrupos: 0,
+    totalProfesores: 0,
     entradasHoy: 0,
     salidasHoy: 0,
-    tasaAsistencia: 0,
+    alumnosPendientes: 0,
   });
   const [registrosRecientes, setRegistrosRecientes] = useState([]);
-  const [grupoUsuario, setGrupoUsuario] = useState(null);
   const [grupos, setGrupos] = useState([]);
   const [mensajesRecientes, setMensajesRecientes] = useState([]);
   const [notificacionesExpandidas, setNotificacionesExpandidas] =
     useState(false);
+  const [ultimoRegistroHijos, setUltimoRegistroHijos] = useState(null);
 
   useEffect(() => {
     cargarRegistrosAsistencia();
+    cargarMensajesRecientes();
     if (esProfesor) {
       cargarGrupos();
+      if (esAdmin) {
+        cargarDatosAdmin();
+      }
     }
-    cargarMensajesRecientes();
   }, []);
 
   // Configurar Socket.IO para actualizaciones en tiempo real
@@ -54,11 +62,8 @@ const Overview = ({ onVerPerfil }) => {
 
     socket.on("nueva-asistencia", (asistencia) => {
       console.log("[Socket] Nueva asistencia en dashboard:", asistencia);
-
-      // Agregar a registros recientes
       setRegistrosRecientes((prev) => [asistencia, ...prev.slice(0, 7)]);
 
-      // Actualizar estadísticas si es del día actual
       const hoy = new Date().toISOString().split("T")[0];
       const fechaAsistencia = new Date(asistencia.fechaHora)
         .toISOString()
@@ -67,7 +72,6 @@ const Overview = ({ onVerPerfil }) => {
       if (fechaAsistencia === hoy) {
         setEstadisticas((prev) => ({
           ...prev,
-          totalRegistros: prev.totalRegistros + 1,
           entradasHoy:
             asistencia.tipo === "entrada"
               ? prev.entradasHoy + 1
@@ -77,6 +81,10 @@ const Overview = ({ onVerPerfil }) => {
               ? prev.salidasHoy + 1
               : prev.salidasHoy,
         }));
+      }
+
+      if (esTutor) {
+        setUltimoRegistroHijos(asistencia);
       }
     });
 
@@ -89,11 +97,35 @@ const Overview = ({ onVerPerfil }) => {
     };
   }, []);
 
+  const cargarDatosAdmin = async () => {
+    try {
+      const [profRes, tutorRes] = await Promise.all([
+        apiGet("profesores", token),
+        apiGet("tutores", token),
+      ]);
+      setEstadisticas((prev) => ({
+        ...prev,
+        totalProfesores: profRes.ok ? profRes.data.length : 0,
+      }));
+    } catch (error) {
+      console.error("Error al cargar datos admin:", error);
+    }
+  };
+
   const cargarGrupos = async () => {
     try {
       const datos = await apiGet("grupos", token);
       if (datos.ok) {
         setGrupos(datos.data);
+        const totalAlumnos = datos.data.reduce(
+          (sum, g) => sum + (g.alumnos?.length || 0),
+          0,
+        );
+        setEstadisticas((prev) => ({
+          ...prev,
+          totalAlumnos,
+          totalGrupos: datos.data.length,
+        }));
       }
     } catch (error) {
       console.error("Error al cargar grupos:", error);
@@ -125,14 +157,25 @@ const Overview = ({ onVerPerfil }) => {
           return fechaRegistro === hoy;
         });
 
-        setEstadisticas({
-          totalRegistros: registros.length,
-          entradasHoy: registrosHoy.filter((r) => r.tipo === "entrada").length,
-          salidasHoy: registrosHoy.filter((r) => r.tipo === "salida").length,
-          tasaAsistencia: 86.5,
-        });
+        const entradasHoy = registrosHoy.filter(
+          (r) => r.tipo === "entrada",
+        ).length;
+        const salidasHoy = registrosHoy.filter(
+          (r) => r.tipo === "salida",
+        ).length;
+
+        setEstadisticas((prev) => ({
+          ...prev,
+          entradasHoy,
+          salidasHoy,
+        }));
 
         setRegistrosRecientes(registros.slice(0, 8));
+
+        // Para tutores: encontrar el último registro de sus hijos
+        if (esTutor && registros.length > 0) {
+          setUltimoRegistroHijos(registros[0]);
+        }
       }
     } catch (error) {
       console.error("Error al cargar asistencias:", error);
@@ -161,6 +204,195 @@ const Overview = ({ onVerPerfil }) => {
     return `${Math.floor(horas / 24)}d`;
   };
 
+  // === CARDS PER ROLE ===
+
+  const renderAdminCards = () => (
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-header">
+          <div className="stat-icon icon-blue">
+            <FontAwesomeIcon icon={faUserGraduate} />
+          </div>
+          <span className="stat-label">Total Alumnos</span>
+        </div>
+        <div className="stat-value">{estadisticas.totalAlumnos}</div>
+        <div className="stat-sub">En {estadisticas.totalGrupos} grupos</div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-header">
+          <div className="stat-icon icon-green">
+            <FontAwesomeIcon icon={faClipboardCheck} />
+          </div>
+          <span className="stat-label">Entradas Hoy</span>
+        </div>
+        <div className="stat-value">{estadisticas.entradasHoy}</div>
+        <div className="stat-sub">
+          {estadisticas.totalAlumnos > 0
+            ? `${Math.round((estadisticas.entradasHoy / estadisticas.totalAlumnos) * 100)}% de asistencia`
+            : "Sin alumnos"}
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-header">
+          <div className="stat-icon icon-orange">
+            <FontAwesomeIcon icon={faSignOutAlt} />
+          </div>
+          <span className="stat-label">Salidas Hoy</span>
+        </div>
+        <div className="stat-value">{estadisticas.salidasHoy}</div>
+        <div className="stat-sub">
+          {estadisticas.entradasHoy > 0
+            ? `${estadisticas.entradasHoy - estadisticas.salidasHoy} aún en clase`
+            : "Sin registros"}
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-header">
+          <div className="stat-icon icon-purple">
+            <FontAwesomeIcon icon={faChalkboardTeacher} />
+          </div>
+          <span className="stat-label">Profesores</span>
+        </div>
+        <div className="stat-value">{estadisticas.totalProfesores}</div>
+        <div className="stat-sub">{estadisticas.totalGrupos} grupos activos</div>
+      </div>
+    </div>
+  );
+
+  const renderProfesorCards = () => {
+    const totalAlumnosProf = grupos.reduce(
+      (sum, g) => sum + (g.alumnos?.length || 0),
+      0,
+    );
+    return (
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-blue">
+              <FontAwesomeIcon icon={faUserGraduate} />
+            </div>
+            <span className="stat-label">Mis Alumnos</span>
+          </div>
+          <div className="stat-value">{totalAlumnosProf}</div>
+          <div className="stat-sub">En {grupos.length} grupo{grupos.length !== 1 ? "s" : ""}</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-green">
+              <FontAwesomeIcon icon={faClipboardCheck} />
+            </div>
+            <span className="stat-label">Entradas Hoy</span>
+          </div>
+          <div className="stat-value">{estadisticas.entradasHoy}</div>
+          <div className="stat-sub">
+            {totalAlumnosProf > 0
+              ? `${Math.round((estadisticas.entradasHoy / totalAlumnosProf) * 100)}% asistencia`
+              : "Sin alumnos"}
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-orange">
+              <FontAwesomeIcon icon={faSignOutAlt} />
+            </div>
+            <span className="stat-label">Salidas Hoy</span>
+          </div>
+          <div className="stat-value">{estadisticas.salidasHoy}</div>
+          <div className="stat-sub">
+            {estadisticas.entradasHoy > 0
+              ? `${estadisticas.entradasHoy - estadisticas.salidasHoy} aún en clase`
+              : "Sin registros"}
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-purple">
+              <FontAwesomeIcon icon={faLayerGroup} />
+            </div>
+            <span className="stat-label">Mis Grupos</span>
+          </div>
+          <div className="stat-value">{grupos.length}</div>
+          <div className="stat-sub">{totalAlumnosProf} alumnos total</div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTutorCards = () => {
+    const numHijos = user?.alumnos?.length || 0;
+    return (
+      <div className="stats-grid stats-grid-tutor">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-blue">
+              <FontAwesomeIcon icon={faUsers} />
+            </div>
+            <span className="stat-label">Mis Hijos</span>
+          </div>
+          <div className="stat-value">{numHijos}</div>
+          <div className="stat-sub">Alumnos asociados</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-green">
+              <FontAwesomeIcon icon={faClipboardCheck} />
+            </div>
+            <span className="stat-label">Entradas Hoy</span>
+          </div>
+          <div className="stat-value">{estadisticas.entradasHoy}</div>
+          <div className="stat-sub">
+            {numHijos > 0
+              ? `de ${numHijos} hijo${numHijos !== 1 ? "s" : ""}`
+              : "Sin hijos registrados"}
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-orange">
+              <FontAwesomeIcon icon={faSignOutAlt} />
+            </div>
+            <span className="stat-label">Salidas Hoy</span>
+          </div>
+          <div className="stat-value">{estadisticas.salidasHoy}</div>
+          <div className="stat-sub">
+            {estadisticas.entradasHoy > estadisticas.salidasHoy
+              ? `${estadisticas.entradasHoy - estadisticas.salidasHoy} aún en clase`
+              : estadisticas.salidasHoy > 0
+                ? "Todos salieron"
+                : "Sin registros"}
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon icon-purple">
+              <FontAwesomeIcon icon={faClock} />
+            </div>
+            <span className="stat-label">Última Actividad</span>
+          </div>
+          <div className="stat-value stat-value-sm">
+            {ultimoRegistroHijos
+              ? formatearTiempoRelativo(ultimoRegistroHijos.fechaHora)
+              : "--"}
+          </div>
+          <div className="stat-sub">
+            {ultimoRegistroHijos
+              ? `${ultimoRegistroHijos.nombre} · ${ultimoRegistroHijos.tipo}`
+              : "Sin actividad reciente"}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="overview">
       <div className="overview-layout">
@@ -173,6 +405,15 @@ const Overview = ({ onVerPerfil }) => {
               </p>
             )}
           </div>
+
+          {/* Tarjetas específicas por rol */}
+          {esAdmin
+            ? renderAdminCards()
+            : esProfesor
+              ? renderProfesorCards()
+              : esTutor
+                ? renderTutorCards()
+                : null}
 
           {/* Tarjetas de Grupos - solo profesor/admin */}
           {esProfesor && grupos.length > 0 && (
@@ -225,89 +466,26 @@ const Overview = ({ onVerPerfil }) => {
             </div>
           )}
 
-          {/* Estadísticas Generales */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon icon-blue">
-                  <FontAwesomeIcon icon={faUsers} />
-                </div>
-                <span className="stat-label">Total Registros</span>
-              </div>
-              <div className="stat-value">{estadisticas.totalRegistros}</div>
-              <div className="stat-trend">
-                <FontAwesomeIcon icon={faArrowUp} />
-                <span>+12.5%</span>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon icon-green">
-                  <FontAwesomeIcon icon={faClipboardCheck} />
-                </div>
-                <span className="stat-label">Entradas Hoy</span>
-              </div>
-              <div className="stat-value">{estadisticas.entradasHoy}</div>
-              <div className="stat-trend">
-                <FontAwesomeIcon icon={faArrowUp} />
-                <span>+8.2%</span>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon icon-purple">
-                  <FontAwesomeIcon icon={faChartBar} />
-                </div>
-                <span className="stat-label">Tasa de Asistencia</span>
-              </div>
-              <div className="stat-value">{estadisticas.tasaAsistencia}%</div>
-              <div className="stat-trend">
-                <FontAwesomeIcon icon={faArrowUp} />
-                <span>+2.1%</span>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon icon-orange">
-                  <FontAwesomeIcon icon={faSignOutAlt} />
-                </div>
-                <span className="stat-label">Salidas Hoy</span>
-              </div>
-              <div className="stat-value">{estadisticas.salidasHoy}</div>
-              <div className="stat-trend">
-                <FontAwesomeIcon icon={faArrowUp} />
-                <span>+15.3%</span>
-              </div>
-            </div>
-          </div>
-
           {/* Registros Recientes */}
           <div className="section-container">
             <div className="section-header">
               <h3>Registros Recientes</h3>
-              <a href="#" className="view-all">
-                Ver Todo
-              </a>
             </div>
 
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>UID Tarjeta</th>
-                    <th>Tipo</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Estado</th>
-                  </tr>
+                  <th>Alumno</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                </tr>
                 </thead>
                 <tbody>
                   {registrosRecientes.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="loading">
+                      <td colSpan="4" className="loading">
                         No hay registros disponibles
                       </td>
                     </tr>
@@ -319,7 +497,7 @@ const Overview = ({ onVerPerfil }) => {
                       return (
                         <tr key={indice}>
                           <td>
-                            <strong>{registro.uidTarjeta}</strong>
+                            <strong>{registro.nombre || registro.uidTarjeta}</strong>
                           </td>
                           <td>
                             <span className={`badge badge-${registro.tipo}`}>
@@ -328,9 +506,6 @@ const Overview = ({ onVerPerfil }) => {
                           </td>
                           <td>{fecha}</td>
                           <td>{hora}</td>
-                          <td>
-                            <span className="badge badge-entrada">Válido</span>
-                          </td>
                         </tr>
                       );
                     })

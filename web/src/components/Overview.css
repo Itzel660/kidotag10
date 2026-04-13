@@ -328,6 +328,32 @@
   gap: 0.25rem;
 }
 
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.stat-value-sm {
+  font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .stat-value-sm {
+    font-size: 1.4rem;
+  }
+}
+
+.stats-grid-tutor {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+  .stats-grid-tutor {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 /* Section Container */
 .section-container {
   background: var(--bg-card);

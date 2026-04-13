@@ -94,7 +94,13 @@
   flex-direction: column;
   gap: 18px;
 }
-
+.login-form .form-group input[type="password"],
+.login-form .form-group input[type="email"] {
+  display: flex;
+  padding-left: 2.5rem;
+  flex-direction: column;
+  gap: 6px;
+}
 .form-group {
   display: flex;
   flex-direction: column;
@@ -141,6 +147,7 @@
 .form-input {
   width: 100%;
   padding: 16px 20px 16px 50px;
+  padding-left: 2rem;
   border: none;
   border-radius: 12px;
   background: #f3f4f6;

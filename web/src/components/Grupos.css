@@ -1,0 +1,225 @@
+.grupos-container {
+  padding: 1.25rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.grupos-container .form-group select {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.grupos-container .form-group select:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+}
+
+.grupo-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.badge-alumnos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 217, 192, 0.1);
+  color: var(--accent-primary);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.badge-alumnos:hover {
+  background: rgba(0, 217, 192, 0.2);
+}
+
+.badge-alumnos .chevron-icon {
+  font-size: 0.7rem;
+  margin-left: 0.15rem;
+}
+
+.badge-activo {
+  background: rgba(72, 187, 120, 0.15);
+  color: #48bb78;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-inactivo {
+  background: rgba(160, 174, 192, 0.15);
+  color: #a0aec0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.row-expanded td {
+  border-bottom: none;
+}
+
+.alumnos-row td {
+  padding: 0 !important;
+}
+
+.alumnos-panel {
+  background: var(--primary-bg);
+  border-top: 1px solid var(--border-color);
+  padding: 1.25rem 1.5rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.alumnos-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alumnos-panel-header h4 {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alumnos-en-grupo {
+  margin-bottom: 1rem;
+}
+
+.sin-alumnos {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.chips-alumnos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip-alumno {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.chip-alumno button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--danger-color);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+
+.chip-alumno button:hover {
+  background: rgba(245, 101, 101, 0.15);
+}
+
+.agregar-alumno-seccion {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.agregar-alumno-seccion h5 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.input-buscar-alumno {
+  width: 100%;
+  max-width: 350px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.85rem;
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+}
+
+.input-buscar-alumno:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+}
+
+.lista-alumnos-disponibles {
+  max-width: 350px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  margin-top: 0.25rem;
+  background: var(--secondary-bg);
+}
+
+.alumno-disponible {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+}
+
+.alumno-disponible:last-child {
+  border-bottom: none;
+}
+
+.alumno-disponible:hover {
+  background: rgba(0, 217, 192, 0.08);
+}
+
+.uid-tag {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--primary-bg);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.sin-resultados {
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .grupos-container .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -12,29 +12,111 @@ import {
   faPhone,
   faGraduationCap,
 } from "@fortawesome/free-solid-svg-icons";
+import io from "socket.io-client";
 import { useAuth } from "../context/AuthContext";
-import { apiGet, apiPut } from "../config/api.config";
+import config, { apiGet, apiPut, apiPost, apiDelete } from "../config/api.config";
 import "./PerfilAlumno.css";
+
+const formInicial = {
+  nombre: "",
+  uidTarjeta: "",
+  fechaNacimiento: "",
+  genero: "",
+  grupo: "",
+  alergias: [],
+  condicionesMedicas: [],
+  tipoSangre: "",
+  peso: "",
+  estatura: "",
+  contactoEmergencia: {
+    nombre: "",
+    telefono: "",
+    parentesco: "",
+  },
+  tutor: null,
+  notasEscolares: "",
+};
 
 const PerfilAlumno = ({ alumnoIdInicial }) => {
   const { user, token } = useAuth();
   const [alumnos, setAlumnos] = useState([]);
   const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
   const [editando, setEditando] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [creando, setCreando] = useState(false);
+  const [formData, setFormData] = useState(formInicial);
   const [nuevaAlergia, setNuevaAlergia] = useState("");
   const [nuevaCondicion, setNuevaCondicion] = useState("");
+  const [tutores, setTutores] = useState([]);
+  const [busquedaTutor, setBusquedaTutor] = useState("");
+  const [grupos, setGrupos] = useState([]);
+  const [mostrarModalTutor, setMostrarModalTutor] = useState(false);
+  const [formTutor, setFormTutor] = useState({
+    nombre: "",
+    email: "",
+    password: "",
+    telefono: "",
+  });
 
   useEffect(() => {
     cargarAlumnos();
-  }, []);
+    cargarTutores();
+    cargarGrupos();
+    // Si alumnoIdInicial es null, mostrar modo creación
+    if (alumnoIdInicial === null) {
+      setCreando(true);
+      setAlumnoSeleccionado(null);
+      setFormData(formInicial);
+      setEditando(true);
+    }
+  }, [alumnoIdInicial]);
+
+  // Escuchar tags NFC leídos en tiempo real
+  useEffect(() => {
+    if (!editando) return;
+
+    const socket = io(config.socketUrl);
+
+    socket.on("tag-leido", ({ uidTarjeta }) => {
+      setFormData((prev) => ({ ...prev, uidTarjeta }));
+    });
+
+    socket.on("tag-ya-registrado", ({ uidTarjeta, nombre }) => {
+      alert(`El tag ${uidTarjeta} ya está registrado para el alumno: ${nombre}`);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [editando]);
+
+  const cargarTutores = async () => {
+    try {
+      const datos = await apiGet("tutores", token);
+      if (datos.ok) {
+        setTutores(datos.data);
+      }
+    } catch (error) {
+      console.error("Error al cargar tutores:", error);
+    }
+  };
+
+  const cargarGrupos = async () => {
+    try {
+      const datos = await apiGet("grupos", token);
+      if (datos.ok) {
+        setGrupos(datos.data);
+      }
+    } catch (error) {
+      console.error("Error al cargar grupos:", error);
+    }
+  };
 
   const cargarAlumnos = async () => {
     try {
       const datos = await apiGet("alumnos", token);
       if (datos.ok) {
         setAlumnos(datos.data);
-        if (datos.data.length > 0 && !alumnoSeleccionado) {
+        if (datos.data.length > 0 && !alumnoSeleccionado && !creando) {
           const inicial = alumnoIdInicial
             ? datos.data.find((a) => a._id === alumnoIdInicial)
             : null;
@@ -48,11 +130,40 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     }
   };
 
+  const crearTutorRapido = async () => {
+    if (!formTutor.nombre || !formTutor.email || !formTutor.password) {
+      alert("Nombre, email y password son obligatorios");
+      return;
+    }
+
+    try {
+      const respuesta = await apiPost("tutores", formTutor, token);
+      if (!respuesta.ok) {
+        alert(respuesta.error?.mensaje || "Error al crear tutor");
+        return;
+      }
+
+      const tutorCreado = respuesta.data;
+      setTutores((prev) => [...prev, tutorCreado]);
+      setFormData({ ...formData, tutor: tutorCreado });
+      setBusquedaTutor(tutorCreado.nombre);
+      setMostrarModalTutor(false);
+      setFormTutor({ nombre: "", email: "", password: "", telefono: "" });
+      alert("Tutor creado y asignado al alumno");
+    } catch (error) {
+      console.error("Error al crear tutor:", error);
+      alert("Error al crear tutor");
+    }
+  };
+
   const inicializarForm = (alumno) => ({
+    nombre: alumno.nombre || "",
+    uidTarjeta: alumno.uidTarjeta || "",
     fechaNacimiento: alumno.fechaNacimiento
       ? new Date(alumno.fechaNacimiento).toISOString().split("T")[0]
       : "",
     genero: alumno.genero || "",
+    grupo: alumno.grupo?._id || "",
     alergias: alumno.alergias || [],
     condicionesMedicas: alumno.condicionesMedicas || [],
     tipoSangre: alumno.tipoSangre || "",
@@ -63,14 +174,16 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
       telefono: alumno.contactoEmergencia?.telefono || "",
       parentesco: alumno.contactoEmergencia?.parentesco || "",
     },
-    grado: alumno.grado || "",
+    tutor: alumno.tutor || null,
     notasEscolares: alumno.notasEscolares || "",
   });
 
   const seleccionarAlumno = (alumno) => {
     setAlumnoSeleccionado(alumno);
     setFormData(inicializarForm(alumno));
+    setBusquedaTutor(alumno?.tutor?.nombre || "");
     setEditando(false);
+    setCreando(false);
   };
 
   const agregarAlergia = () => {
@@ -110,6 +223,12 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
   const guardarPerfil = async () => {
     try {
+      if (creando) {
+        // Crear nuevo alumno
+        await guardarAlumno();
+        return;
+      }
+
       const datosEnviar = { ...formData };
       if (datosEnviar.peso === "") delete datosEnviar.peso;
       else datosEnviar.peso = Number(datosEnviar.peso);
@@ -117,6 +236,20 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
       else datosEnviar.estatura = Number(datosEnviar.estatura);
       if (datosEnviar.fechaNacimiento === "")
         delete datosEnviar.fechaNacimiento;
+
+      // Para profesores/admins, incluir también datos básicos y tag
+      if (user?.tipo === "profesor") {
+        datosEnviar.uidTarjeta = formData.uidTarjeta?.toUpperCase();
+        datosEnviar.tutor = formData.tutor?._id || null;
+
+        // Actualizar datos base (nombre, uid, tutor, grupo) via endpoint principal
+        await apiPut(`alumnos/${alumnoSeleccionado._id}`, {
+          nombre: formData.nombre,
+          uidTarjeta: formData.uidTarjeta?.toUpperCase(),
+          tutor: formData.tutor?._id || null,
+          grupo: formData.grupo || null,
+        }, token);
+      }
 
       const datos = await apiPut(
         `alumnos/${alumnoSeleccionado._id}/perfil`,
@@ -127,17 +260,103 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
       if (datos.ok) {
         alert("Perfil actualizado correctamente");
         setEditando(false);
-        setAlumnoSeleccionado(datos.data);
-        setAlumnos(
-          alumnos.map((a) => (a._id === datos.data._id ? datos.data : a)),
+        // Recargar datos completos del alumno
+        const respuestaFinal = await apiGet(
+          `alumnos/${alumnoSeleccionado._id}`,
+          token,
         );
-        setFormData(inicializarForm(datos.data));
+        const alumnoActualizado = respuestaFinal.ok
+          ? respuestaFinal.data
+          : datos.data;
+        setAlumnoSeleccionado(alumnoActualizado);
+        setAlumnos(
+          alumnos.map((a) =>
+            a._id === alumnoActualizado._id ? alumnoActualizado : a,
+          ),
+        );
+        setFormData(inicializarForm(alumnoActualizado));
       } else {
         alert(datos.error?.mensaje || "Error al actualizar perfil");
       }
     } catch (error) {
       console.error("Error al guardar perfil:", error);
       alert("Error al guardar perfil");
+    }
+  };
+
+  const guardarAlumno = async () => {
+    try {
+      const payload = {
+        ...formData,
+        uidTarjeta: formData.uidTarjeta.toUpperCase(),
+      };
+
+      if (!payload.fechaNacimiento) delete payload.fechaNacimiento;
+      if (!payload.genero) delete payload.genero;
+      if (payload.peso === "") delete payload.peso;
+      else payload.peso = Number(payload.peso);
+      if (payload.estatura === "") delete payload.estatura;
+      else payload.estatura = Number(payload.estatura);
+
+      const datosBase = {
+        nombre: payload.nombre,
+        uidTarjeta: payload.uidTarjeta,
+        fechaNacimiento: payload.fechaNacimiento,
+        genero: payload.genero,
+        tutor: payload.tutor?._id || null,
+        grupo: payload.grupo || null,
+      };
+
+      const respuestaBase = await apiPost("alumnos", datosBase, token);
+
+      if (!respuestaBase.ok) {
+        alert(respuestaBase.error?.mensaje || "Error al guardar alumno");
+        return;
+      }
+
+      const alumnoGuardado = respuestaBase.data;
+      const respuestaPerfil = await apiPut(
+        `alumnos/${alumnoGuardado._id}/perfil`,
+        {
+          alergias: payload.alergias,
+          condicionesMedicas: payload.condicionesMedicas,
+          tipoSangre: payload.tipoSangre,
+          peso: payload.peso,
+          estatura: payload.estatura,
+          contactoEmergencia: payload.contactoEmergencia,
+          notasEscolares: payload.notasEscolares,
+          fechaNacimiento: payload.fechaNacimiento,
+          genero: payload.genero,
+          notasEscolares: payload.notasEscolares,
+        },
+        token,
+      );
+
+      if (!respuestaPerfil.ok) {
+        alert(respuestaPerfil.error?.mensaje || "Error al guardar perfil");
+        return;
+      }
+
+      let alumnoActualizado = respuestaPerfil.data;
+
+      const respuestaFinal = await apiGet(
+        `alumnos/${alumnoGuardado._id}`,
+        token,
+      );
+      if (respuestaFinal.ok) {
+        alumnoActualizado = respuestaFinal.data;
+      }
+
+      alert("Alumno registrado correctamente");
+
+      setAlumnos((prev) => [...prev, alumnoActualizado]);
+      setAlumnoSeleccionado(alumnoActualizado);
+      setFormData(inicializarForm(alumnoActualizado));
+      setEditando(false);
+      setCreando(false);
+    } catch (error) {
+      console.error("Error al guardar alumno:", error);
+      alert("Error al guardar alumno");
     }
   };
 
@@ -152,6 +371,249 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     }
     return edad;
   };
+
+  if (creando && editando) {
+    return (
+      <div className="perfil-container">
+        <div className="perfil-header-card">
+          <h2>Crear Nuevo Alumno</h2>
+        </div>
+        <div className="perfil-form">
+          <div className="perfil-seccion">
+            <h3>Información Básica</h3>
+            <div className="perfil-form-grid">
+              <div className="campo">
+                <label>Nombre *</label>
+                <input
+                  type="text"
+                  value={formData.nombre}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nombre: e.target.value })
+                  }
+                  required
+                  placeholder="Nombre del alumno"
+                />
+              </div>
+              <div className="campo">
+                <label>UID Tarjeta *</label>
+                <input
+                  type="text"
+                  value={formData.uidTarjeta}
+                  onChange={(e) =>
+                    setFormData({ ...formData, uidTarjeta: e.target.value })
+                  }
+                  required
+                  placeholder="A1B2C3D4"
+                />
+              </div>
+              <div className="campo">
+                <label>Grupo</label>
+                <select
+                  value={formData.grupo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, grupo: e.target.value })
+                  }
+                >
+                  <option value="">Sin grupo</option>
+                  {grupos.map((g) => (
+                    <option key={g._id} value={g._id}>
+                      {g.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="campo">
+                <label>Fecha de Nacimiento</label>
+                <input
+                  type="date"
+                  value={formData.fechaNacimiento}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      fechaNacimiento: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="campo">
+                <label>Género</label>
+                <select
+                  value={formData.genero}
+                  onChange={(e) =>
+                    setFormData({ ...formData, genero: e.target.value })
+                  }
+                >
+                  <option value="">Seleccionar</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div className="campo">
+                <label>Tutor</label>
+                <input
+                  type="text"
+                  placeholder="Buscar o crear tutor..."
+                  value={busquedaTutor}
+                  onChange={(e) => setBusquedaTutor(e.target.value)}
+                  list="tutores-list"
+                />
+                <datalist id="tutores-list">
+                  {tutores
+                    .filter((t) =>
+                      t.nombre
+                        .toLowerCase()
+                        .includes(busquedaTutor.toLowerCase()),
+                    )
+                    .map((tutor) => (
+                      <option
+                        key={tutor._id}
+                        value={tutor.nombre}
+                        onClick={() => setFormData({ ...formData, tutor })}
+                      />
+                    ))}
+                </datalist>
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalTutor(true)}
+                  className="btn-crear-tutor"
+                >
+                  Crear nuevo tutor
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="perfil-seccion">
+            <h3>
+              <FontAwesomeIcon icon={faHeartbeat} /> Información Médica
+            </h3>
+            <div className="perfil-form-grid">
+              <div className="campo">
+                <label>Tipo de Sangre</label>
+                <select
+                  value={formData.tipoSangre}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tipoSangre: e.target.value })
+                  }
+                >
+                  <option value="">Seleccionar</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              <div className="campo">
+                <label>
+                  <FontAwesomeIcon icon={faWeight} /> Peso (kg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.peso}
+                  placeholder="Ej: 25.5"
+                  onChange={(e) =>
+                    setFormData({ ...formData, peso: e.target.value })
+                  }
+                />
+              </div>
+              <div className="campo">
+                <label>
+                  <FontAwesomeIcon icon={faRulerVertical} /> Estatura (cm)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.estatura}
+                  placeholder="Ej: 120"
+                  onChange={(e) =>
+                    setFormData({ ...formData, estatura: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="perfil-acciones">
+            <button className="btn-guardar-perfil" onClick={guardarPerfil}>
+              <FontAwesomeIcon icon={faSave} /> Guardar Alumno
+            </button>
+            <button
+              className="btn-cancelar"
+              onClick={() => {
+                setCreando(false);
+                setEditando(false);
+                setFormData(formInicial);
+                if (alumnos.length > 0) {
+                  seleccionarAlumno(alumnos[0]);
+                }
+              }}
+            >
+              <FontAwesomeIcon icon={faTimes} /> Cancelar
+            </button>
+          </div>
+        </div>
+
+        {mostrarModalTutor && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Crear Nuevo Tutor</h3>
+              <div className="perfil-form-grid">
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  value={formTutor.nombre}
+                  onChange={(e) =>
+                    setFormTutor({ ...formTutor, nombre: e.target.value })
+                  }
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={formTutor.email}
+                  onChange={(e) =>
+                    setFormTutor({ ...formTutor, email: e.target.value })
+                  }
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={formTutor.password}
+                  onChange={(e) =>
+                    setFormTutor({ ...formTutor, password: e.target.value })
+                  }
+                />
+                <input
+                  type="tel"
+                  placeholder="Teléfono"
+                  value={formTutor.telefono}
+                  onChange={(e) =>
+                    setFormTutor({ ...formTutor, telefono: e.target.value })
+                  }
+                />
+              </div>
+              <div className="modal-buttons">
+                <button onClick={crearTutorRapido}>Crear</button>
+                <button
+                  onClick={() => setMostrarModalTutor(false)}
+                  className="btn-cancelar"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (alumnos.length === 0) {
     return (
@@ -189,8 +651,8 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                   {calcularEdad(alumnoSeleccionado.fechaNacimiento)} años
                 </span>
               )}
-              {alumnoSeleccionado.grado && (
-                <span className="perfil-grado">{alumnoSeleccionado.grado}</span>
+              {alumnoSeleccionado.grupo?.nombre && (
+                <span className="perfil-grado">{alumnoSeleccionado.grupo.nombre}</span>
               )}
             </div>
             <button
@@ -198,6 +660,8 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
               onClick={() => {
                 if (editando) {
                   setFormData(inicializarForm(alumnoSeleccionado));
+                } else {
+                  setBusquedaTutor(alumnoSeleccionado?.tutor?.nombre || "");
                 }
                 setEditando(!editando);
               }}
@@ -209,6 +673,125 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
           {editando ? (
             <div className="perfil-form">
+              {user?.tipo === "profesor" && (
+                <div className="perfil-seccion">
+                  <h3>Información Básica</h3>
+                  <div className="perfil-form-grid">
+                    <div className="campo">
+                      <label>Nombre *</label>
+                      <input
+                        type="text"
+                        value={formData.nombre}
+                        onChange={(e) =>
+                          setFormData({ ...formData, nombre: e.target.value })
+                        }
+                        required
+                        placeholder="Nombre del alumno"
+                      />
+                    </div>
+                    <div className="campo">
+                      <label>UID Tarjeta *</label>
+                      <input
+                        type="text"
+                        value={formData.uidTarjeta}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            uidTarjeta: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="A1B2C3D4"
+                      />
+                    </div>
+                    <div className="campo">
+                      <label>Grupo</label>
+                      <select
+                        value={formData.grupo}
+                        onChange={(e) =>
+                          setFormData({ ...formData, grupo: e.target.value })
+                        }
+                      >
+                        <option value="">Sin grupo</option>
+                        {grupos.map((g) => (
+                          <option key={g._id} value={g._id}>
+                            {g.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="campo">
+                      <label>Fecha de Nacimiento</label>
+                      <input
+                        type="date"
+                        value={formData.fechaNacimiento}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            fechaNacimiento: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="campo">
+                      <label>Género</label>
+                      <select
+                        value={formData.genero}
+                        onChange={(e) =>
+                          setFormData({ ...formData, genero: e.target.value })
+                        }
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="femenino">Femenino</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                    </div>
+                    <div className="campo">
+                      <label>Tutor</label>
+                      <input
+                        type="text"
+                        placeholder="Buscar o crear tutor..."
+                        value={busquedaTutor}
+                        onChange={(e) => {
+                          setBusquedaTutor(e.target.value);
+                          const tutorEncontrado = tutores.find(
+                            (t) => t.nombre === e.target.value,
+                          );
+                          if (tutorEncontrado) {
+                            setFormData({
+                              ...formData,
+                              tutor: tutorEncontrado,
+                            });
+                          } else {
+                            setFormData({ ...formData, tutor: null });
+                          }
+                        }}
+                        list="tutores-list-edit"
+                      />
+                      <datalist id="tutores-list-edit">
+                        {tutores
+                          .filter((t) =>
+                            t.nombre
+                              .toLowerCase()
+                              .includes(busquedaTutor.toLowerCase()),
+                          )
+                          .map((tutor) => (
+                            <option key={tutor._id} value={tutor.nombre} />
+                          ))}
+                      </datalist>
+                      <button
+                        type="button"
+                        onClick={() => setMostrarModalTutor(true)}
+                        className="btn-crear-tutor"
+                      >
+                        Crear nuevo tutor
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="perfil-seccion">
                 <h3>
                   <FontAwesomeIcon icon={faHeartbeat} /> Información Médica
@@ -436,9 +1019,15 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                     </span>
                   </div>
                   <div className="dato">
-                    <span className="dato-label">Grado</span>
+                    <span className="dato-label">Grupo</span>
                     <span className="dato-valor">
-                      {alumnoSeleccionado.grado || "No registrado"}
+                      {alumnoSeleccionado.grupo?.nombre || "Sin grupo"}
+                    </span>
+                  </div>
+                  <div className="dato">
+                    <span className="dato-label">Tutor</span>
+                    <span className="dato-valor">
+                      {alumnoSeleccionado.tutor?.nombre || "No asignado"}
                     </span>
                   </div>
                 </div>
@@ -554,6 +1143,57 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {mostrarModalTutor && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Crear Nuevo Tutor</h3>
+            <div className="perfil-form-grid">
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={formTutor.nombre}
+                onChange={(e) =>
+                  setFormTutor({ ...formTutor, nombre: e.target.value })
+                }
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={formTutor.email}
+                onChange={(e) =>
+                  setFormTutor({ ...formTutor, email: e.target.value })
+                }
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={formTutor.password}
+                onChange={(e) =>
+                  setFormTutor({ ...formTutor, password: e.target.value })
+                }
+              />
+              <input
+                type="tel"
+                placeholder="Teléfono"
+                value={formTutor.telefono}
+                onChange={(e) =>
+                  setFormTutor({ ...formTutor, telefono: e.target.value })
+                }
+              />
+            </div>
+            <div className="modal-buttons">
+              <button onClick={crearTutorRapido}>Crear</button>
+              <button
+                onClick={() => setMostrarModalTutor(false)}
+                className="btn-cancelar"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

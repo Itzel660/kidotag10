@@ -17,6 +17,8 @@ import Mensajes from "./components/Mensajes";
 import Profesores from "./components/Profesores";
 import Tutores from "./components/Tutores";
 import PerfilAlumno from "./components/PerfilAlumno";
+import AlumnosPorGrupo from "./components/AlumnosPorGrupo";
+import Grupos from "./components/Grupos";
 import "./App.css";
 
 function Dashboard() {
@@ -38,13 +40,28 @@ function Dashboard() {
       case "asistencias":
         return <Asistencias />;
       case "alumnos":
-        return <Alumnos />;
+        return (
+          <Alumnos
+            onEditarAlumno={(alumnoId) => {
+              setAlumnoPerfilId(alumnoId);
+              setSeccionActiva("mis-hijos");
+            }}
+            onCrearAlumno={() => {
+              setAlumnoPerfilId(null);
+              setSeccionActiva("mis-hijos");
+            }}
+          />
+        );
+      case "alumnos-por-grupo":
+        return <AlumnosPorGrupo />;
       case "mensajes":
         return <Mensajes />;
       case "profesores":
         return <Profesores />;
       case "tutores":
         return <Tutores />;
+      case "grupos":
+        return <Grupos />;
       case "mis-hijos":
         return <PerfilAlumno alumnoIdInicial={alumnoPerfilId} />;
       default:
