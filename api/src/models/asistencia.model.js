@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const asistenciaSchema = new mongoose.Schema(
   {
+    alumnoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Alumno",
+      index: true,
+    },
     uidTarjeta: {
       type: String,
       required: true,

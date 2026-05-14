@@ -42,7 +42,11 @@ const Asistencias = () => {
       if (datos.ok) {
         setGrupos(datos.data);
         // Si es profesor (no admin) y tiene un solo grupo, seleccionarlo automáticamente
-        if (user?.tipo === "profesor" && !user?.esAdmin && datos.data.length === 1) {
+        if (
+          user?.tipo === "profesor" &&
+          !user?.esAdmin &&
+          datos.data.length === 1
+        ) {
           setGrupoFiltro(datos.data[0]._id);
         }
       }
@@ -174,9 +178,7 @@ const Asistencias = () => {
             </select>
           )}
           {esProfesor && grupos.length === 1 && (
-            <span className="grupo-badge-inline">
-              {grupos[0].nombre}
-            </span>
+            <span className="grupo-badge-inline">{grupos[0].nombre}</span>
           )}
           <button onClick={manejarFiltro} className="btn-filter">
             <FontAwesomeIcon icon={faFilter} />
@@ -228,17 +230,17 @@ const Asistencias = () => {
 
                 return (
                   <tr key={indice}>
-                    <td>
+                    <td data-label="Alumno">
                       <strong>{registro.nombre || "Desconocido"}</strong>
                     </td>
-                    <td>
+                    <td data-label="Tipo">
                       <span className={`badge badge-${registro.tipo}`}>
                         {registro.tipo}
                       </span>
                     </td>
-                    <td>{fecha}</td>
-                    <td>{hora}</td>
-                    <td>
+                    <td data-label="Fecha">{fecha}</td>
+                    <td data-label="Hora">{hora}</td>
+                    <td data-label="UID">
                       <small>{registro.uidTarjeta}</small>
                     </td>
                   </tr>

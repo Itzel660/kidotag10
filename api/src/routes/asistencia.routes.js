@@ -3,8 +3,30 @@ const router = express.Router();
 const asistenciaController = require("../controllers/asistencia.controller");
 const {
   verificarToken,
+  esProfesor,
   filtrarAlumnosPorTutor,
 } = require("../middlewares/auth.middleware");
+
+router.get(
+  "/reportes/export",
+  verificarToken,
+  esProfesor,
+  asistenciaController.exportarReporteAsistencias,
+);
+
+router.get(
+  "/reportes/plantilla",
+  verificarToken,
+  esProfesor,
+  asistenciaController.exportarPlantillaGrupo,
+);
+
+router.get(
+  "/reportes",
+  verificarToken,
+  esProfesor,
+  asistenciaController.obtenerReporteAsistencias,
+);
 
 /**
  * @swagger

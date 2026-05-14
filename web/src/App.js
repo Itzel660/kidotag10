@@ -1,10 +1,5 @@
-import React, { useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
@@ -12,6 +7,7 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Overview from "./components/Overview";
 import Asistencias from "./components/Asistencias";
+import Reportes from "./components/Reportes";
 import Alumnos from "./components/Alumnos";
 import Mensajes from "./components/Mensajes";
 import Profesores from "./components/Profesores";
@@ -25,12 +21,15 @@ function Dashboard() {
   const [seccionActiva, setSeccionActiva] = useState("overview");
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
   const [alumnoPerfilId, setAlumnoPerfilId] = useState(null);
+  const [grupoExpandidoId, setGrupoExpandidoId] = useState(null);
 
   const renderizarSeccion = () => {
     switch (seccionActiva) {
       case "overview":
         return (
           <Overview
+            onCambiarSeccion={cambiarSeccion}
+            onVerGrupo={(grupoId) => cambiarSeccion("grupos", { grupoId })}
             onVerPerfil={(id) => {
               setAlumnoPerfilId(id);
               setSeccionActiva("mis-hijos");
@@ -39,6 +38,8 @@ function Dashboard() {
         );
       case "asistencias":
         return <Asistencias />;
+      case "reportes":
+        return <Reportes />;
       case "alumnos":
         return (
           <Alumnos
@@ -61,7 +62,7 @@ function Dashboard() {
       case "tutores":
         return <Tutores />;
       case "grupos":
-        return <Grupos />;
+        return <Grupos grupoExpandidoInicial={grupoExpandidoId} />;
       case "mis-hijos":
         return <PerfilAlumno alumnoIdInicial={alumnoPerfilId} />;
       default:
@@ -69,8 +70,11 @@ function Dashboard() {
     }
   };
 
-  const cambiarSeccion = (seccion) => {
+  const cambiarSeccion = (seccion, opciones = {}) => {
     setSeccionActiva(seccion);
+    setGrupoExpandidoId(
+      seccion === "grupos" && opciones.grupoId ? opciones.grupoId : null,
+    );
     setSidebarAbierto(false);
   };
 

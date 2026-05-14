@@ -1,0 +1,248 @@
+.reportes {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.reportes-subtitle {
+  margin: 0 0 0.85rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.reportes-toolbar {
+  align-items: stretch;
+}
+
+.reportes-mode-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reportes-mode-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.reportes-mode-btn.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.reportes-group-field {
+  min-width: 190px;
+}
+
+.reportes-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.reportes-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.reportes-status-chip:hover {
+  transform: translateY(-1px);
+}
+
+.reportes-status-chip.success {
+  background: var(--color-success-soft);
+  color: var(--success-color);
+}
+
+.reportes-status-chip.warning {
+  background: var(--color-warning-soft);
+  color: var(--warning-color);
+}
+
+.reportes-status-chip.danger {
+  background: var(--color-danger-soft);
+  color: var(--danger-color);
+}
+
+.reportes-status-chip.active {
+  border-color: currentColor;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.reportes-status-chip:not(.active) {
+  opacity: 0.6;
+}
+
+.reportes-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.8rem 0.95rem;
+  margin-bottom: 0.85rem;
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  border-radius: 8px;
+  border: 1px solid rgba(58, 98, 136, 0.16);
+  font-size: 0.84rem;
+}
+
+.reportes-note svg {
+  margin-top: 0.1rem;
+}
+
+.reportes-note-error {
+  background: var(--color-danger-soft);
+  color: var(--danger-color);
+  border-color: rgba(156, 65, 65, 0.18);
+}
+
+.reportes-note-warning {
+  background: var(--color-warning-soft);
+  color: var(--warning-color);
+  border-color: rgba(155, 106, 31, 0.18);
+}
+
+.reportes-stats-row {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.reportes-stat-card.success {
+  border-color: rgba(47, 107, 83, 0.18);
+}
+
+.reportes-stat-card.danger {
+  border-color: rgba(156, 65, 65, 0.18);
+}
+
+.reportes-stat-card.warning {
+  border-color: rgba(155, 106, 31, 0.18);
+}
+
+.reportes-stat-card.info {
+  border-color: rgba(58, 98, 136, 0.18);
+}
+
+.reportes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.95rem;
+}
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent-primary);
+  color: white;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.btn-export.secondary {
+  background: var(--color-info);
+}
+
+.btn-export.secondary:hover:not(:disabled) {
+  background: var(--accent-secondary);
+}
+
+.btn-export.ghost {
+  background: var(--color-surface-contrast);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-export.ghost:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+}
+
+.btn-export:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.reportes-table .badge-presente {
+  background: var(--color-success-soft);
+  color: var(--success-color);
+}
+
+.reportes-table .badge-inasistencia {
+  background: var(--color-danger-soft);
+  color: var(--danger-color);
+}
+
+.reportes-table .badge-tarde {
+  background: var(--color-warning-soft);
+  color: var(--warning-color);
+}
+
+.reportes-empty-state {
+  min-height: 40vh;
+}
+
+@media (max-width: 767px) {
+  .reportes-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .reportes-toolbar {
+    flex-direction: column;
+  }
+
+  .reportes-mode-toggle,
+  .reportes-group-field,
+  .btn-export {
+    width: 100%;
+  }
+
+  .reportes-statuses,
+  .reportes-actions {
+    gap: 0.5rem;
+  }
+
+  .reportes-status-chip {
+    flex: 1 1 calc(50% - 0.5rem);
+    justify-content: center;
+  }
+
+  .reportes-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

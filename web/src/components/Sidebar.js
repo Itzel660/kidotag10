@@ -13,6 +13,7 @@ import {
   faChild,
   faCogs,
   faLayerGroup,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
@@ -32,9 +33,7 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
   const esTutor = user?.tipo === "tutor";
 
   const getItemsMenu = () => {
-    const items = [
-      { id: "overview", etiqueta: "Overview", icono: faChartLine },
-    ];
+    const items = [{ id: "overview", etiqueta: "Inicio", icono: faChartLine }];
 
     if (esTutor) {
       items.push({ id: "mis-hijos", etiqueta: "Mis Hijos", icono: faChild });
@@ -64,11 +63,11 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
         icono: faUserTie,
       });
       items.push({ id: "tutores", etiqueta: "Tutores", icono: faUserFriends });
-      items.push({
-        id: "gestion-avanzada",
-        etiqueta: "Gestión Avanzada",
-        icono: faCogs,
-      });
+      // items.push({
+      //   id: "gestion-avanzada",
+      //   etiqueta: "Gestión Avanzada",
+      //   icono: faCogs,
+      // });
     }
 
     if (esProfesor) {
@@ -89,8 +88,18 @@ const Sidebar = ({ seccionActiva, setSeccionActiva, abierto, setAbierto }) => {
   return (
     <aside className={`sidebar ${abierto ? "active" : ""}`}>
       <div className="logo-container">
-        <img src={logo} alt="Kidotag" className="logo" />
-        <h2>KIDOTAG</h2>
+        <div className="logo-group">
+          <img src={logo} alt="Kidotag" className="logo" />
+          <h2>KIDOTAG</h2>
+        </div>
+        <button
+          type="button"
+          className="sidebar-close-btn"
+          onClick={() => setAbierto(false)}
+          aria-label="Cerrar menu lateral"
+        >
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
       </div>
 
       <nav className="nav-menu">
