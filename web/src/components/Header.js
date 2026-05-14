@@ -11,7 +11,7 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
   const obtenerTituloSeccion = () => {
     switch (seccionActiva) {
       case "overview":
-        return "Dashboard";
+        return "Inicio";
       case "asistencias":
         return "Asistencias";
       case "alumnos":
@@ -25,9 +25,11 @@ const Header = ({ seccionActiva, setSeccionActiva, onMenuToggle }) => {
       case "tutores":
         return "Gestión de Tutores";
       case "mis-hijos":
-        return "Perfil de Mis Hijos";
+        return user?.tipo === "tutor"
+          ? "Perfil de mis hijos"
+          : "Perfil del alumno";
       default:
-        return "Dashboard";
+        return "Inicio";
     }
   };
 

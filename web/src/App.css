@@ -1,28 +1,35 @@
 .app-container {
   display: flex;
   min-height: 100vh;
-  background-color: var(--primary-bg);
+  background: transparent;
   position: relative;
+  isolation: isolate;
 }
 
 .main-content {
+  --main-content-padding: 0.75rem;
   flex: 1;
-  padding: 0.5rem;
+  padding: var(--main-content-padding);
+  padding-top: 0 !important;
   max-width: 100%;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 /* Mobile First - Sin margen izquierdo por defecto */
 @media (min-width: 768px) {
   .main-content {
-    margin-left: 240px;
-    padding: 0.75rem;
+    --main-content-padding: 1rem;
+    margin-left: var(--layout-sidebar-width);
+    padding: var(--main-content-padding);
   }
 }
 
 @media (min-width: 1024px) {
   .main-content {
-    padding: 1rem;
+    --main-content-padding: 1.25rem;
+    padding: var(--main-content-padding);
   }
 }
 
@@ -33,9 +40,159 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   z-index: 999;
   display: block;
+}
+
+.app-loading-state {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-page);
+  color: var(--accent-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 767px) {
+  .main-content .table-container {
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .main-content .data-table,
+  .main-content .alumnos-table {
+    width: 100%;
+    min-width: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .main-content .data-table thead,
+  .main-content .alumnos-table thead {
+    display: none;
+  }
+
+  .main-content .data-table,
+  .main-content .data-table tbody,
+  .main-content .data-table tr,
+  .main-content .data-table td,
+  .main-content .alumnos-table,
+  .main-content .alumnos-table tbody,
+  .main-content .alumnos-table tr,
+  .main-content .alumnos-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .main-content .data-table tbody,
+  .main-content .alumnos-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .main-content .data-table tr,
+  .main-content .alumnos-table tr {
+    padding: 0.8rem 0.9rem;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .main-content .data-table td,
+  .main-content .alumnos-table td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 0.35rem 0;
+    border: none !important;
+    text-align: right;
+    font-size: 0.84rem;
+    word-break: break-word;
+  }
+
+  .main-content .data-table td::before,
+  .main-content .alumnos-table td::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    max-width: 40%;
+    color: var(--text-secondary);
+    font-size: 0.66rem;
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .main-content .data-table td small,
+  .main-content .alumnos-table td small {
+    color: var(--text-secondary);
+  }
+
+  .main-content .table-cell-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+  }
+
+  .main-content .data-table td.actions,
+  .main-content .alumnos-table td.actions {
+    align-items: center;
+  }
+
+  .main-content .data-table .loading,
+  .main-content .data-table .empty,
+  .main-content .alumnos-table .loading,
+  .main-content .alumnos-table .empty {
+    display: block;
+    padding: 0 !important;
+    text-align: left;
+  }
+
+  .main-content .data-table .loading::before,
+  .main-content .data-table .empty::before,
+  .main-content .alumnos-table .loading::before,
+  .main-content .alumnos-table .empty::before {
+    content: none;
+  }
+
+  .main-content .data-table .alumnos-row,
+  .main-content .alumnos-table .alumnos-row {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .main-content .data-table .alumnos-row td,
+  .main-content .alumnos-table .alumnos-row td {
+    display: block;
+    padding: 0 !important;
+  }
+
+  .main-content .data-table .alumnos-row td::before,
+  .main-content .alumnos-table .alumnos-row td::before {
+    content: none;
+  }
+
+  .main-content .data-table .alumnos-panel,
+  .main-content .alumnos-table .alumnos-panel {
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+  }
 }
 
 @media (min-width: 768px) {

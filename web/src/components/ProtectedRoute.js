@@ -7,18 +7,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          fontSize: "1.2rem",
-          color: "#667eea",
-        }}
-      >
-        Cargando...
-      </div>
+      <div className="app-loading-state">Cargando...</div>
     );
   }
 

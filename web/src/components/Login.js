@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "./Login.css";
 import logo from "../assets/logo.svg";
+import loginIllustration from "../assets/login-tag-reader-illustration.svg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -54,33 +55,35 @@ const Login = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group">
-                <div className="input-wrapper">
-                  <FontAwesomeIcon icon={faUser} className="input-icon" />
-                  <input
-                    id="email"
-                    type="email"
-                    className="form-input"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+              <div className="form-group-inputs">
+                <div className="form-group">
+                  <div className="input-wrapper">
+                    <FontAwesomeIcon icon={faUser} className="input-icon" />
+                    <input
+                      id="email"
+                      type="email"
+                      className="form-input"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <div className="input-wrapper">
-                  <FontAwesomeIcon icon={faLock} className="input-icon" />
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    className="form-input"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                <div className="form-group">
+                  <div className="input-wrapper">
+                    <FontAwesomeIcon icon={faLock} className="input-icon" />
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      className="form-input"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
                   <button
                     type="button"
                     className="toggle-password"
@@ -98,10 +101,10 @@ const Login = () => {
                 <button type="submit" className="btn-login" disabled={loading}>
                   {loading ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} spin /> Loading...
+                      <FontAwesomeIcon icon={faSpinner} spin /> Ingresando...
                     </>
                   ) : (
-                    "Login"
+                    "Ingresar"
                   )}
                 </button>
               </div>
@@ -110,12 +113,13 @@ const Login = () => {
         </div>
 
         <div className="login-right">
-          <div className="illustration">
-            <div className="card-stack">
-              <div className="card card-1"></div>
-              <div className="card card-2"></div>
-              <div className="card card-3"></div>
-            </div>
+          <div className="illustration" aria-hidden="true">
+            <img
+              src={loginIllustration}
+              alt=""
+              className="login-illustration"
+              draggable="false"
+            />
           </div>
         </div>
       </div>

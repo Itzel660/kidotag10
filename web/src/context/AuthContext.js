@@ -7,9 +7,45 @@ import React, {
   useCallback,
 } from "react";
 import config from "../config/api.config";
-import { apiGet } from "../config/api.config";
+import { apiGet, readApiResponse } from "../config/api.config";
 
 const AuthContext = createContext(null);
+
+const getLoginErrorMessage = ({ response, data, error } = {}) => {
+  if (response) {
+    if (response.status === 401) {
+      return "Email o contraseña incorrectos";
+    }
+
+    if (response.status === 400) {
+      return data?.error?.mensaje || "Email y contraseña son requeridos";
+    }
+
+    if (response.status === 403) {
+      return data?.error?.mensaje || "La cuenta está inactiva";
+    }
+
+    if (response.status >= 500) {
+      return "Ocurrio un error del servidor. Intenta nuevamente más tarde";
+    }
+
+    if (data?.error?.codigo === "RESPUESTA_INVALIDA") {
+      return "No se pudo procesar la respuesta del servidor. Intenta nuevamente";
+    }
+
+    return data?.error?.mensaje || "Ocurrio un error al iniciar sesión";
+  }
+
+  if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+    return "El servidor tardó demasiado en responder. Intenta nuevamente";
+  }
+
+  if (error instanceof TypeError) {
+    return "No se pudo conectar con el servidor. Verifica tu conexión e intenta nuevamente";
+  }
+
+  return error?.message || "Ocurrio un error al iniciar sesión";
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -58,9 +94,25 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      iniciarPolling(storedToken);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+
+        if (parsedUser && typeof parsedUser === "object") {
+          setToken(storedToken);
+          setUser(parsedUser);
+          iniciarPolling(storedToken);
+        } else {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
+      } catch (error) {
+        console.warn(
+          "Sesion almacenada invalida, limpiando localStorage",
+          error,
+        );
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
     setLoading(false);
 
@@ -69,18 +121,36 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      const normalizedEmail = email.trim();
+      const normalizedPassword = password.trim();
+
+      if (!normalizedEmail || !normalizedPassword) {
+        return {
+          ok: false,
+          error: "Email y contraseña son requeridos",
+        };
+      }
+
       const response = await fetch(`${config.apiUrl}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(config.timeout),
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        }),
       });
 
-      const data = await response.json();
+      const data = await readApiResponse(response);
 
-      if (!response.ok) {
-        throw new Error(data.error?.mensaje || "Error al iniciar sesión");
+      if (!response.ok || !data?.ok) {
+        return {
+          ok: false,
+          error: getLoginErrorMessage({ response, data }),
+        };
       }
 
       if (data.ok && data.data) {
@@ -101,7 +171,10 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Error en login:", error);
-      return { ok: false, error: error.message };
+      return {
+        ok: false,
+        error: getLoginErrorMessage({ error }),
+      };
     }
   };
 
