@@ -4,6 +4,7 @@
 class Alumno {
   final String id;
   final String nombre;
+  final String apellidos;
   final String uidTarjeta;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -11,16 +12,21 @@ class Alumno {
   Alumno({
     required this.id,
     required this.nombre,
+    this.apellidos = '',
     required this.uidTarjeta,
     this.createdAt,
     this.updatedAt,
   });
+
+  String get nombreCompleto =>
+      [nombre, apellidos].where((parte) => parte.trim().isNotEmpty).join(' ');
 
   /// Crear Alumno desde JSON del API
   factory Alumno.fromJson(Map<String, dynamic> json) {
     return Alumno(
       id: json['_id'] ?? '',
       nombre: json['nombre'] ?? '',
+      apellidos: json['apellidos'] ?? '',
       uidTarjeta: json['uidTarjeta'] ?? '',
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
@@ -31,13 +37,14 @@ class Alumno {
 
   /// Convertir a JSON para enviar al API
   Map<String, dynamic> toJson() {
-    return {'nombre': nombre, 'uidTarjeta': uidTarjeta};
+    return {'nombre': nombre, 'apellidos': apellidos, 'uidTarjeta': uidTarjeta};
   }
 
   /// Copiar con modificaciones
   Alumno copyWith({
     String? id,
     String? nombre,
+    String? apellidos,
     String? uidTarjeta,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -45,6 +52,7 @@ class Alumno {
     return Alumno(
       id: id ?? this.id,
       nombre: nombre ?? this.nombre,
+      apellidos: apellidos ?? this.apellidos,
       uidTarjeta: uidTarjeta ?? this.uidTarjeta,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -53,7 +61,7 @@ class Alumno {
 
   @override
   String toString() {
-    return 'Alumno(id: $id, nombre: $nombre, uid: $uidTarjeta)';
+    return 'Alumno(id: $id, nombre: $nombreCompleto, uid: $uidTarjeta)';
   }
 
   @override

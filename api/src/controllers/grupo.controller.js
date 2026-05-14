@@ -1,13 +1,38 @@
 const Grupo = require("../models/grupo.model");
 const Profesor = require("../models/profesor.model");
 const Alumno = require("../models/alumno.model");
+const { obtenerNombreCompletoAlumno } = require("../utils/alumnoNombre");
 
 // Crear un nuevo grupo
 exports.crearGrupo = async (req, res) => {
   try {
     const { nombre, descripcion, profesor, alumnos, horario } = req.body;
+    if (req.usuario.tipo !== "profesor") {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo los profesores pueden crear grupos",
+        },
+      });
+    }
 
-    if (!nombre || !profesor) {
+    const profesorSolicitante = await Profesor.findById(req.usuario.id);
+    if (!profesorSolicitante) {
+      return res.status(404).json({
+        ok: false,
+        error: {
+          codigo: "PROFESOR_NO_ENCONTRADO",
+          mensaje: "Profesor no encontrado",
+        },
+      });
+    }
+
+    const profesorAsignado = profesorSolicitante.esAdmin
+      ? profesor
+      : req.usuario.id;
+
+    if (!nombre || !profesorAsignado) {
       return res.status(400).json({
         ok: false,
         error: {
@@ -18,7 +43,7 @@ exports.crearGrupo = async (req, res) => {
     }
 
     // Verificar que el profesor existe
-    const profesorExiste = await Profesor.findById(profesor);
+    const profesorExiste = await Profesor.findById(profesorAsignado);
     if (!profesorExiste) {
       return res.status(404).json({
         ok: false,
@@ -32,7 +57,7 @@ exports.crearGrupo = async (req, res) => {
     const grupo = new Grupo({
       nombre,
       descripcion,
-      profesor,
+      profesor: profesorAsignado,
       alumnos: alumnos || [],
       horario,
     });
@@ -44,7 +69,7 @@ exports.crearGrupo = async (req, res) => {
 
     const grupoPopulado = await Grupo.findById(grupo._id)
       .populate("profesor", "nombre email")
-      .populate("alumnos", "nombre uidTarjeta");
+      .populate("alumnos", "nombre apellidos uidTarjeta");
 
     res.status(201).json({
       ok: true,
@@ -77,7 +102,7 @@ exports.listarGrupos = async (req, res) => {
 
     const grupos = await Grupo.find(query)
       .populate("profesor", "nombre email")
-      .populate("alumnos", "nombre uidTarjeta")
+      .populate("alumnos", "nombre apellidos uidTarjeta")
       .sort({ nombre: 1 })
       .lean();
 
@@ -103,7 +128,7 @@ exports.obtenerGrupo = async (req, res) => {
     const { id } = req.params;
     const grupo = await Grupo.findById(id)
       .populate("profesor", "nombre email especialidad")
-      .populate("alumnos", "nombre uidTarjeta")
+      .populate("alumnos", "nombre apellidos uidTarjeta")
       .lean();
 
     if (!grupo) {
@@ -139,15 +164,29 @@ exports.actualizarGrupo = async (req, res) => {
     const { nombre, descripcion, profesor, alumnos, horario, activo } =
       req.body;
 
-    const grupo = await Grupo.findByIdAndUpdate(
-      id,
-      { nombre, descripcion, profesor, alumnos, horario, activo },
-      { new: true, runValidators: true },
-    )
-      .populate("profesor", "nombre email")
-      .populate("alumnos", "nombre uidTarjeta");
+    if (req.usuario.tipo !== "profesor") {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo los profesores pueden actualizar grupos",
+        },
+      });
+    }
 
-    if (!grupo) {
+    const profesorSolicitante = await Profesor.findById(req.usuario.id);
+    if (!profesorSolicitante) {
+      return res.status(404).json({
+        ok: false,
+        error: {
+          codigo: "PROFESOR_NO_ENCONTRADO",
+          mensaje: "Profesor no encontrado",
+        },
+      });
+    }
+
+    const grupoActual = await Grupo.findById(id);
+    if (!grupoActual) {
       return res.status(404).json({
         ok: false,
         error: {
@@ -156,6 +195,76 @@ exports.actualizarGrupo = async (req, res) => {
         },
       });
     }
+
+    const esAdmin = Boolean(profesorSolicitante.esAdmin);
+    if (!esAdmin && String(grupoActual.profesor) !== String(req.usuario.id)) {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje: "Solo puedes editar tus propios grupos",
+        },
+      });
+    }
+
+    if (
+      !esAdmin &&
+      profesor !== undefined &&
+      String(profesor) !== String(req.usuario.id)
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: {
+          codigo: "ACCESO_DENEGADO",
+          mensaje:
+            "Solo los administradores pueden reasignar grupos a otro profesor",
+        },
+      });
+    }
+
+    let profesorAsignado = grupoActual.profesor;
+
+    if (esAdmin && profesor !== undefined) {
+      if (!profesor) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "Debe seleccionar un profesor valido",
+          },
+        });
+      }
+
+      const profesorExiste = await Profesor.findById(profesor);
+      if (!profesorExiste) {
+        return res.status(404).json({
+          ok: false,
+          error: {
+            codigo: "PROFESOR_NO_ENCONTRADO",
+            mensaje: "Profesor no encontrado",
+          },
+        });
+      }
+
+      profesorAsignado = profesor;
+    }
+
+    const cambios = {
+      profesor: esAdmin ? profesorAsignado : req.usuario.id,
+    };
+
+    if (nombre !== undefined) cambios.nombre = nombre;
+    if (descripcion !== undefined) cambios.descripcion = descripcion;
+    if (alumnos !== undefined) cambios.alumnos = alumnos;
+    if (horario !== undefined) cambios.horario = horario;
+    if (activo !== undefined) cambios.activo = activo;
+
+    const grupo = await Grupo.findByIdAndUpdate(id, cambios, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("profesor", "nombre email")
+      .populate("alumnos", "nombre apellidos uidTarjeta");
 
     console.log(`[GRUPO] ✓ Actualizado: ${grupo.nombre}`);
 
@@ -243,7 +352,7 @@ exports.agregarAlumno = async (req, res) => {
       { new: true },
     )
       .populate("profesor", "nombre email")
-      .populate("alumnos", "nombre uidTarjeta");
+      .populate("alumnos", "nombre apellidos uidTarjeta");
 
     if (!grupo) {
       return res.status(404).json({
@@ -256,7 +365,7 @@ exports.agregarAlumno = async (req, res) => {
     }
 
     console.log(
-      `[GRUPO] ✓ Alumno agregado: ${alumno.nombre} → Grupo: ${grupo.nombre}`,
+      `[GRUPO] ✓ Alumno agregado: ${obtenerNombreCompletoAlumno(alumno)} → Grupo: ${grupo.nombre}`,
     );
 
     res.status(200).json({
@@ -286,7 +395,7 @@ exports.removerAlumno = async (req, res) => {
       { new: true },
     )
       .populate("profesor", "nombre email")
-      .populate("alumnos", "nombre uidTarjeta");
+      .populate("alumnos", "nombre apellidos uidTarjeta");
 
     if (!grupo) {
       return res.status(404).json({

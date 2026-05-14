@@ -9,6 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { apiGet, apiPost, apiPut, apiDelete } from "../config/api.config";
 import { useAuth } from "../context/AuthContext";
+import { obtenerNombreCompletoAlumno } from "../utils/alumnoNombre";
 import "./Tutores.css";
 
 const Tutores = () => {
@@ -238,7 +239,7 @@ const Tutores = () => {
                       checked={formData.alumnos.includes(alumno._id)}
                       onChange={() => toggleAlumno(alumno._id)}
                     />
-                    {alumno.nombre}
+                    {obtenerNombreCompletoAlumno(alumno)}
                   </label>
                 ))}
                 {alumnos.length === 0 && (
@@ -284,13 +285,15 @@ const Tutores = () => {
             ) : (
               tutoresFiltrados.map((t) => (
                 <tr key={t._id}>
-                  <td>
+                  <td data-label="Nombre">
                     <strong>{t.nombre}</strong>
                   </td>
-                  <td>{t.email}</td>
-                  <td>{t.telefono || "-"}</td>
-                  <td>{obtenerNombresAlumnos(t.alumnos)}</td>
-                  <td className="actions">
+                  <td data-label="Email">{t.email}</td>
+                  <td data-label="Teléfono">{t.telefono || "-"}</td>
+                  <td data-label="Alumnos">
+                    {obtenerNombresAlumnos(t.alumnos)}
+                  </td>
+                  <td data-label="Acciones" className="actions">
                     <button
                       className="btn-icon btn-edit"
                       onClick={() => editar(t)}

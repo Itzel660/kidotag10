@@ -1,6 +1,36 @@
 const Alumno = require("../models/alumno.model");
 const Tutor = require("../models/tutor.model");
 const Grupo = require("../models/grupo.model");
+const {
+  limpiarTexto,
+  obtenerNombreCompletoAlumno,
+} = require("../utils/alumnoNombre");
+
+const CAMPOS_TUTOR_ALUMNO = "nombre email telefono";
+
+const obtenerNombreAlumno = (alumno = {}) =>
+  obtenerNombreCompletoAlumno(alumno) ||
+  limpiarTexto(alumno.nombre) ||
+  "Alumno";
+
+const obtenerAlumnoConRelaciones = async (alumnoId) => {
+  const alumno = await Alumno.findById(alumnoId)
+    .populate("tutor", CAMPOS_TUTOR_ALUMNO)
+    .lean();
+
+  if (!alumno) {
+    return null;
+  }
+
+  const grupo = await Grupo.findOne({ alumnos: alumnoId })
+    .select("_id nombre")
+    .lean();
+
+  return {
+    ...alumno,
+    grupo: grupo || null,
+  };
+};
 
 // Busca un alumno por uidTarjeta (uso interno)
 exports.buscarAlumnoPorTag = async (uidTarjeta) => {
@@ -10,21 +40,33 @@ exports.buscarAlumnoPorTag = async (uidTarjeta) => {
 // Registrar un nuevo alumno
 exports.registrarAlumno = async (req, res) => {
   try {
-    const { nombre, uidTarjeta, fechaNacimiento, genero, tutor, grupo } =
-      req.body;
+    const {
+      nombre,
+      apellidos,
+      uidTarjeta,
+      fechaNacimiento,
+      genero,
+      tutor,
+      grupo,
+    } = req.body;
+    const nombreNormalizado = limpiarTexto(nombre);
+    const apellidosNormalizados = limpiarTexto(apellidos);
+    const uidTarjetaNormalizado = limpiarTexto(uidTarjeta);
 
-    if (!nombre || !uidTarjeta) {
+    if (!nombreNormalizado || !uidTarjetaNormalizado || !tutor) {
       return res.status(400).json({
         ok: false,
         error: {
           codigo: "DATOS_INVALIDOS",
-          mensaje: "Nombre y UID de tarjeta son requeridos",
+          mensaje: "Nombre, UID de tarjeta y tutor son requeridos",
         },
       });
     }
 
     // Verificar si el UID ya está registrado
-    const existente = await Alumno.findOne({ uidTarjeta });
+    const existente = await Alumno.findOne({
+      uidTarjeta: uidTarjetaNormalizado,
+    });
     if (existente) {
       return res.status(409).json({
         ok: false,
@@ -35,32 +77,34 @@ exports.registrarAlumno = async (req, res) => {
       });
     }
 
-    const datosAlumno = { nombre, uidTarjeta };
+    const tutorExistente = await Tutor.findById(tutor);
+    if (!tutorExistente) {
+      return res.status(404).json({
+        ok: false,
+        error: {
+          codigo: "TUTOR_NO_ENCONTRADO",
+          mensaje: "Tutor asociado no encontrado",
+        },
+      });
+    }
+
+    const datosAlumno = {
+      nombre: nombreNormalizado,
+      uidTarjeta: uidTarjetaNormalizado,
+      tutor,
+    };
+    if (apellidos !== undefined) {
+      datosAlumno.apellidos = apellidosNormalizados;
+    }
     if (fechaNacimiento) datosAlumno.fechaNacimiento = fechaNacimiento;
     if (genero) datosAlumno.genero = genero;
-
-    if (tutor) {
-      const tutorExistente = await Tutor.findById(tutor);
-      if (!tutorExistente) {
-        return res.status(404).json({
-          ok: false,
-          error: {
-            codigo: "TUTOR_NO_ENCONTRADO",
-            mensaje: "Tutor asociado no encontrado",
-          },
-        });
-      }
-      datosAlumno.tutor = tutor;
-    }
 
     const alumno = new Alumno(datosAlumno);
     await alumno.save();
 
-    if (tutor) {
-      await Tutor.findByIdAndUpdate(tutor, {
-        $addToSet: { alumnos: alumno._id },
-      });
-    }
+    await Tutor.findByIdAndUpdate(tutor, {
+      $addToSet: { alumnos: alumno._id },
+    });
 
     // Agregar alumno al grupo si se proporcionó
     if (grupo) {
@@ -69,11 +113,15 @@ exports.registrarAlumno = async (req, res) => {
       });
     }
 
-    console.log(`[ALUMNO] ✓ Registrado: ${nombre} (UID: ${uidTarjeta})`);
+    const alumnoCreado = await obtenerAlumnoConRelaciones(alumno._id);
+
+    console.log(
+      `[ALUMNO] ✓ Registrado: ${obtenerNombreAlumno(alumnoCreado)} (UID: ${uidTarjetaNormalizado})`,
+    );
 
     res.status(201).json({
       ok: true,
-      data: alumno,
+      data: alumnoCreado,
     });
   } catch (error) {
     console.error("[ALUMNO] Error al registrar:", error);
@@ -98,8 +146,8 @@ exports.listarAlumnos = async (req, res) => {
     }
 
     const alumnos = await Alumno.find(query)
-      .populate("tutor", "nombre email")
-      .sort({ nombre: 1 })
+      .populate("tutor", CAMPOS_TUTOR_ALUMNO)
+      .sort({ nombre: 1, apellidos: 1 })
       .lean();
 
     // Obtener el grupo de cada alumno
@@ -132,9 +180,7 @@ exports.listarAlumnos = async (req, res) => {
 exports.obtenerAlumno = async (req, res) => {
   try {
     const { id } = req.params;
-    const alumno = await Alumno.findById(id)
-      .populate("tutor", "nombre email")
-      .lean();
+    const alumno = await obtenerAlumnoConRelaciones(id);
 
     if (!alumno) {
       return res.status(404).json({
@@ -146,14 +192,9 @@ exports.obtenerAlumno = async (req, res) => {
       });
     }
 
-    // Obtener grupo del alumno
-    const grupoAlumno = await Grupo.findOne({ alumnos: id })
-      .select("_id nombre")
-      .lean();
-
     res.status(200).json({
       ok: true,
-      data: { ...alumno, grupo: grupoAlumno || null },
+      data: alumno,
     });
   } catch (error) {
     console.error("[ALUMNO] Error al obtener:", error);
@@ -171,15 +212,23 @@ exports.obtenerAlumno = async (req, res) => {
 exports.actualizarAlumno = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, uidTarjeta, fechaNacimiento, genero, tutor, grupo } =
-      req.body;
+    const {
+      nombre,
+      apellidos,
+      uidTarjeta,
+      fechaNacimiento,
+      genero,
+      tutor,
+      grupo,
+    } = req.body;
 
     if (
-      !nombre &&
-      !uidTarjeta &&
-      !fechaNacimiento &&
-      !genero &&
-      !tutor &&
+      nombre === undefined &&
+      apellidos === undefined &&
+      uidTarjeta === undefined &&
+      fechaNacimiento === undefined &&
+      genero === undefined &&
+      tutor === undefined &&
       grupo === undefined
     ) {
       return res.status(400).json({
@@ -192,8 +241,23 @@ exports.actualizarAlumno = async (req, res) => {
     }
 
     // Si se actualiza el UID, verificar que no esté duplicado
-    if (uidTarjeta) {
-      const existente = await Alumno.findOne({ uidTarjeta, _id: { $ne: id } });
+    let uidTarjetaNormalizado;
+    if (uidTarjeta !== undefined) {
+      uidTarjetaNormalizado = limpiarTexto(uidTarjeta);
+      if (!uidTarjetaNormalizado) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "El UID de tarjeta no puede estar vacío",
+          },
+        });
+      }
+
+      const existente = await Alumno.findOne({
+        uidTarjeta: uidTarjetaNormalizado,
+        _id: { $ne: id },
+      });
       if (existente) {
         return res.status(409).json({
           ok: false,
@@ -217,25 +281,52 @@ exports.actualizarAlumno = async (req, res) => {
     }
 
     const actualizacion = {};
-    if (nombre) actualizacion.nombre = nombre;
-    if (uidTarjeta) actualizacion.uidTarjeta = uidTarjeta;
+    if (nombre !== undefined) {
+      const nombreNormalizado = limpiarTexto(nombre);
+      if (!nombreNormalizado) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "El nombre no puede estar vacío",
+          },
+        });
+      }
+
+      actualizacion.nombre = nombreNormalizado;
+    }
+    if (apellidos !== undefined) {
+      actualizacion.apellidos = limpiarTexto(apellidos);
+    }
+    if (uidTarjeta !== undefined) {
+      actualizacion.uidTarjeta = uidTarjetaNormalizado;
+    }
     if (fechaNacimiento) actualizacion.fechaNacimiento = fechaNacimiento;
     if (genero) actualizacion.genero = genero;
 
     if (tutor !== undefined) {
-      if (tutor) {
-        const tutorExistente = await Tutor.findById(tutor);
-        if (!tutorExistente) {
-          return res.status(404).json({
-            ok: false,
-            error: {
-              codigo: "TUTOR_NO_ENCONTRADO",
-              mensaje: "Tutor asociado no encontrado",
-            },
-          });
-        }
+      if (!tutor) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "El alumno debe tener un tutor asociado",
+          },
+        });
       }
-      actualizacion.tutor = tutor || null;
+
+      const tutorExistente = await Tutor.findById(tutor);
+      if (!tutorExistente) {
+        return res.status(404).json({
+          ok: false,
+          error: {
+            codigo: "TUTOR_NO_ENCONTRADO",
+            mensaje: "Tutor asociado no encontrado",
+          },
+        });
+      }
+
+      actualizacion.tutor = tutor;
 
       // actualizar relación tutor <-> alumno
       if (
@@ -260,10 +351,7 @@ exports.actualizarAlumno = async (req, res) => {
     // Actualizar grupo del alumno
     if (grupo !== undefined) {
       // Remover alumno de todos los grupos actuales
-      await Grupo.updateMany(
-        { alumnos: id },
-        { $pull: { alumnos: id } },
-      );
+      await Grupo.updateMany({ alumnos: id }, { $pull: { alumnos: id } });
       // Agregar al nuevo grupo si se proporcionó
       if (grupo) {
         await Grupo.findByIdAndUpdate(grupo, {
@@ -272,15 +360,13 @@ exports.actualizarAlumno = async (req, res) => {
       }
     }
 
-    const alumno = await Alumno.findByIdAndUpdate(
+    const alumnoActualizadoDoc = await Alumno.findByIdAndUpdate(
       id,
       { $set: actualizacion },
       { new: true, runValidators: true },
-    )
-      .populate("tutor", "nombre email")
-      .lean();
+    );
 
-    if (!alumno) {
+    if (!alumnoActualizadoDoc) {
       return res.status(404).json({
         ok: false,
         error: {
@@ -290,8 +376,10 @@ exports.actualizarAlumno = async (req, res) => {
       });
     }
 
+    const alumno = await obtenerAlumnoConRelaciones(id);
+
     console.log(
-      `[ALUMNO] ✓ Actualizado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`,
+      `[ALUMNO] ✓ Actualizado: ${obtenerNombreAlumno(alumno)} (UID: ${alumno.uidTarjeta})`,
     );
 
     res.status(200).json({
@@ -329,6 +417,7 @@ exports.actualizarPerfil = async (req, res) => {
         ]
       : [
           "nombre",
+          "apellidos",
           "uidTarjeta",
           "fechaNacimiento",
           "genero",
@@ -355,6 +444,36 @@ exports.actualizarPerfil = async (req, res) => {
       }
     }
 
+    if (actualizacion.nombre !== undefined) {
+      actualizacion.nombre = limpiarTexto(actualizacion.nombre);
+      if (!actualizacion.nombre) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "El nombre no puede estar vacío",
+          },
+        });
+      }
+    }
+
+    if (actualizacion.apellidos !== undefined) {
+      actualizacion.apellidos = limpiarTexto(actualizacion.apellidos);
+    }
+
+    if (actualizacion.uidTarjeta !== undefined) {
+      actualizacion.uidTarjeta = limpiarTexto(actualizacion.uidTarjeta);
+      if (!actualizacion.uidTarjeta) {
+        return res.status(400).json({
+          ok: false,
+          error: {
+            codigo: "DATOS_INVALIDOS",
+            mensaje: "El UID de tarjeta no puede estar vacío",
+          },
+        });
+      }
+    }
+
     if (Object.keys(actualizacion).length === 0) {
       return res.status(400).json({
         ok: false,
@@ -367,7 +486,7 @@ exports.actualizarPerfil = async (req, res) => {
     }
 
     // Si se actualiza el UID, verificar que no esté duplicado
-    if (actualizacion.uidTarjeta) {
+    if (actualizacion.uidTarjeta !== undefined) {
       const existente = await Alumno.findOne({
         uidTarjeta: actualizacion.uidTarjeta,
         _id: { $ne: id },
@@ -434,7 +553,9 @@ exports.actualizarPerfil = async (req, res) => {
       });
     }
 
-    console.log(`[ALUMNO] ✓ Perfil actualizado: ${alumno.nombre}`);
+    console.log(
+      `[ALUMNO] ✓ Perfil actualizado: ${obtenerNombreAlumno(alumno)}`,
+    );
 
     res.status(200).json({
       ok: true,
@@ -475,7 +596,7 @@ exports.eliminarAlumno = async (req, res) => {
     }
 
     console.log(
-      `[ALUMNO] ✓ Eliminado: ${alumno.nombre} (UID: ${alumno.uidTarjeta})`,
+      `[ALUMNO] ✓ Eliminado: ${obtenerNombreAlumno(alumno)} (UID: ${alumno.uidTarjeta})`,
     );
 
     res.status(200).json({

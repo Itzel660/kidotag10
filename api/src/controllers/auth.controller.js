@@ -77,7 +77,7 @@ exports.loginUnificado = async (req, res) => {
     // Buscar en tutores
     const tutor = await Tutor.findOne({ email }).populate(
       "alumnos",
-      "nombre uidTarjeta",
+      "nombre apellidos uidTarjeta",
     );
     if (tutor) {
       if (!tutor.activo) {
@@ -155,7 +155,7 @@ exports.loginTutor = async (req, res) => {
     // Buscar tutor por email
     const tutor = await Tutor.findOne({ email }).populate(
       "alumnos",
-      "nombre uidTarjeta",
+      "nombre apellidos uidTarjeta",
     );
 
     if (!tutor) {
@@ -342,7 +342,7 @@ exports.obtenerUsuarioActual = async (req, res) => {
     if (tipo === "tutor") {
       usuario = await Tutor.findById(id)
         .select("-password")
-        .populate("alumnos", "nombre uidTarjeta")
+        .populate("alumnos", "nombre apellidos uidTarjeta")
         .lean();
     } else if (tipo === "profesor") {
       usuario = await Profesor.findById(id).select("-password").lean();

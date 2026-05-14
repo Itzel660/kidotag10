@@ -16,7 +16,7 @@
 .grupos-container .form-group select:focus {
   border-color: var(--accent-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .grupo-desc {
@@ -30,18 +30,18 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(0, 217, 192, 0.1);
+  background: var(--color-accent-soft);
   color: var(--accent-primary);
   padding: 0.25rem 0.6rem;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .badge-alumnos:hover {
-  background: rgba(0, 217, 192, 0.2);
+  background: var(--color-accent-soft-strong);
 }
 
 .badge-alumnos .chevron-icon {
@@ -50,8 +50,8 @@
 }
 
 .badge-activo {
-  background: rgba(72, 187, 120, 0.15);
-  color: #48bb78;
+  background: var(--color-success-soft);
+  color: var(--success-color);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -59,8 +59,8 @@
 }
 
 .badge-inactivo {
-  background: rgba(160, 174, 192, 0.15);
-  color: #a0aec0;
+  background: var(--color-neutral-soft);
+  color: var(--color-neutral);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -120,7 +120,7 @@
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   padding: 0.3rem 0.6rem;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   font-size: 0.85rem;
   color: var(--text-primary);
 }
@@ -139,7 +139,7 @@
 }
 
 .chip-alumno button:hover {
-  background: rgba(245, 101, 101, 0.15);
+  background: var(--color-danger-soft);
 }
 
 .agregar-alumno-seccion {
@@ -170,7 +170,7 @@
 .input-buscar-alumno:focus {
   border-color: var(--accent-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .lista-alumnos-disponibles {
@@ -200,7 +200,7 @@
 }
 
 .alumno-disponible:hover {
-  background: rgba(0, 217, 192, 0.08);
+  background: var(--color-accent-soft);
 }
 
 .uid-tag {

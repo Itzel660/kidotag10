@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiGet } from "../config/api.config";
 import { useAuth } from "../context/AuthContext";
+import { obtenerNombreCompletoAlumno } from "../utils/alumnoNombre";
 import "./Alumnos.css";
 
 const AlumnosPorGrupo = () => {
@@ -29,24 +30,30 @@ const AlumnosPorGrupo = () => {
     <div className="alumnos-container">
       <h2>Alumnos por Grupo</h2>
       {alumnos.length > 0 ? (
-        <table className="alumnos-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Grupo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {alumnos.map((alumno) => (
-              <tr key={alumno._id}>
-                <td>{alumno.nombre}</td>
-                <td>{alumno.email}</td>
-                <td>{alumno.grupo?.nombre || "Sin grupo"}</td>
+        <div className="table-container">
+          <table className="alumnos-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Grupo</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {alumnos.map((alumno) => (
+                <tr key={alumno._id}>
+                  <td data-label="Nombre">
+                    {obtenerNombreCompletoAlumno(alumno)}
+                  </td>
+                  <td data-label="Email">{alumno.email}</td>
+                  <td data-label="Grupo">
+                    {alumno.grupo?.nombre || "Sin grupo"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p>No hay alumnos disponibles.</p>
       )}

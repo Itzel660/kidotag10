@@ -14,11 +14,22 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import io from "socket.io-client";
 import { useAuth } from "../context/AuthContext";
-import config, { apiGet, apiPut, apiPost, apiDelete } from "../config/api.config";
+import config, {
+  apiGet,
+  apiPut,
+  apiPost,
+  apiDelete,
+} from "../config/api.config";
+import {
+  compararAlumnosPorNombre,
+  obtenerCamposNombreAlumno,
+  obtenerNombreCompletoAlumno,
+} from "../utils/alumnoNombre";
 import "./PerfilAlumno.css";
 
 const formInicial = {
   nombre: "",
+  apellidos: "",
   uidTarjeta: "",
   fechaNacimiento: "",
   genero: "",
@@ -39,6 +50,13 @@ const formInicial = {
 
 const PerfilAlumno = ({ alumnoIdInicial }) => {
   const { user, token } = useAuth();
+  const esTutor = user?.tipo === "tutor";
+  const mostrarAvisoMedico =
+    user?.tipo === "profesor" || user?.tipo === "admin";
+  const avisoInformacionMedica =
+    "Esta información fue proporcionada por el tutor y puede no ser exacta. Consulte con el tutor antes de confiar en ella o tomar cualquier acción basada en la misma.";
+  const avisoPrecisionMedicaTutor =
+    "Asegúrate de que esta información médica sea exacta. Si no estás seguro de algún dato, no lo llenes hasta confirmarlo.";
   const [alumnos, setAlumnos] = useState([]);
   const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
   const [editando, setEditando] = useState(false);
@@ -62,13 +80,13 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     cargarTutores();
     cargarGrupos();
     // Si alumnoIdInicial es null, mostrar modo creación
-    if (alumnoIdInicial === null) {
+    if (alumnoIdInicial === null && user?.tipo === "profesor") {
       setCreando(true);
       setAlumnoSeleccionado(null);
       setFormData(formInicial);
       setEditando(true);
     }
-  }, [alumnoIdInicial]);
+  }, [alumnoIdInicial, user?.tipo]);
 
   // Escuchar tags NFC leídos en tiempo real
   useEffect(() => {
@@ -81,7 +99,9 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     });
 
     socket.on("tag-ya-registrado", ({ uidTarjeta, nombre }) => {
-      alert(`El tag ${uidTarjeta} ya está registrado para el alumno: ${nombre}`);
+      alert(
+        `El tag ${uidTarjeta} ya está registrado para el alumno: ${nombre}`,
+      );
     });
 
     return () => {
@@ -130,6 +150,50 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     }
   };
 
+  const buscarTutorSeleccionado = (valor) => {
+    const texto = valor.trim().toLowerCase();
+
+    if (!texto) {
+      return null;
+    }
+
+    return (
+      tutores.find((tutor) => {
+        const nombre = tutor.nombre?.trim().toLowerCase() || "";
+        const email = tutor.email?.trim().toLowerCase() || "";
+
+        return nombre === texto || email === texto;
+      }) || null
+    );
+  };
+
+  const sincronizarTutorSeleccionado = (valor) => {
+    setBusquedaTutor(valor);
+
+    const tutorSeleccionado = buscarTutorSeleccionado(valor);
+    setFormData((prev) => ({
+      ...prev,
+      tutor: tutorSeleccionado,
+    }));
+  };
+
+  const asignarTutor = (tutor) => {
+    setFormData((prev) => ({
+      ...prev,
+      tutor,
+    }));
+    setBusquedaTutor(tutor ? tutor.nombre : "");
+  };
+
+  const validarTutorAsignado = () => {
+    if (formData.tutor?._id) {
+      return true;
+    }
+
+    alert("Debes asignar un tutor al alumno");
+    return false;
+  };
+
   const crearTutorRapido = async () => {
     if (!formTutor.nombre || !formTutor.email || !formTutor.password) {
       alert("Nombre, email y password son obligatorios");
@@ -145,8 +209,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
       const tutorCreado = respuesta.data;
       setTutores((prev) => [...prev, tutorCreado]);
-      setFormData({ ...formData, tutor: tutorCreado });
-      setBusquedaTutor(tutorCreado.nombre);
+      asignarTutor(tutorCreado);
       setMostrarModalTutor(false);
       setFormTutor({ nombre: "", email: "", password: "", telefono: "" });
       alert("Tutor creado y asignado al alumno");
@@ -157,7 +220,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
   };
 
   const inicializarForm = (alumno) => ({
-    nombre: alumno.nombre || "",
+    ...obtenerCamposNombreAlumno(alumno),
     uidTarjeta: alumno.uidTarjeta || "",
     fechaNacimiento: alumno.fechaNacimiento
       ? new Date(alumno.fechaNacimiento).toISOString().split("T")[0]
@@ -239,16 +302,32 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
       // Para profesores/admins, incluir también datos básicos y tag
       if (user?.tipo === "profesor") {
+        if (!validarTutorAsignado()) {
+          return;
+        }
+
         datosEnviar.uidTarjeta = formData.uidTarjeta?.toUpperCase();
         datosEnviar.tutor = formData.tutor?._id || null;
 
         // Actualizar datos base (nombre, uid, tutor, grupo) via endpoint principal
-        await apiPut(`alumnos/${alumnoSeleccionado._id}`, {
-          nombre: formData.nombre,
-          uidTarjeta: formData.uidTarjeta?.toUpperCase(),
-          tutor: formData.tutor?._id || null,
-          grupo: formData.grupo || null,
-        }, token);
+        const respuestaBase = await apiPut(
+          `alumnos/${alumnoSeleccionado._id}`,
+          {
+            nombre: formData.nombre,
+            apellidos: formData.apellidos,
+            uidTarjeta: formData.uidTarjeta?.toUpperCase(),
+            tutor: formData.tutor?._id || null,
+            grupo: formData.grupo || null,
+          },
+          token,
+        );
+
+        if (!respuestaBase.ok) {
+          alert(
+            respuestaBase.error?.mensaje || "Error al actualizar el alumno",
+          );
+          return;
+        }
       }
 
       const datos = await apiPut(
@@ -286,6 +365,10 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
   const guardarAlumno = async () => {
     try {
+      if (!validarTutorAsignado()) {
+        return;
+      }
+
       const payload = {
         ...formData,
         uidTarjeta: formData.uidTarjeta.toUpperCase(),
@@ -300,6 +383,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
       const datosBase = {
         nombre: payload.nombre,
+        apellidos: payload.apellidos,
         uidTarjeta: payload.uidTarjeta,
         fechaNacimiento: payload.fechaNacimiento,
         genero: payload.genero,
@@ -327,7 +411,6 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
           notasEscolares: payload.notasEscolares,
           fechaNacimiento: payload.fechaNacimiento,
           genero: payload.genero,
-          notasEscolares: payload.notasEscolares,
         },
         token,
       );
@@ -349,7 +432,9 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
       alert("Alumno registrado correctamente");
 
-      setAlumnos((prev) => [...prev, alumnoActualizado]);
+      setAlumnos((prev) =>
+        [...prev, alumnoActualizado].sort(compararAlumnosPorNombre),
+      );
       setAlumnoSeleccionado(alumnoActualizado);
       setFormData(inicializarForm(alumnoActualizado));
       setEditando(false);
@@ -372,6 +457,10 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
     return edad;
   };
 
+  const nombreAlumnoSeleccionado = obtenerNombreCompletoAlumno(
+    alumnoSeleccionado || {},
+  );
+
   if (creando && editando) {
     return (
       <div className="perfil-container">
@@ -383,7 +472,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
             <h3>Información Básica</h3>
             <div className="perfil-form-grid">
               <div className="campo">
-                <label>Nombre *</label>
+                <label>Nombre(s) *</label>
                 <input
                   type="text"
                   value={formData.nombre}
@@ -391,7 +480,18 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                     setFormData({ ...formData, nombre: e.target.value })
                   }
                   required
-                  placeholder="Nombre del alumno"
+                  placeholder="Nombre(s) del alumno"
+                />
+              </div>
+              <div className="campo">
+                <label>Apellidos</label>
+                <input
+                  type="text"
+                  value={formData.apellidos}
+                  onChange={(e) =>
+                    setFormData({ ...formData, apellidos: e.target.value })
+                  }
+                  placeholder="Apellidos del alumno"
                 />
               </div>
               <div className="campo">
@@ -450,12 +550,12 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                 </select>
               </div>
               <div className="campo">
-                <label>Tutor</label>
+                <label>Tutor *</label>
                 <input
                   type="text"
-                  placeholder="Buscar o crear tutor..."
+                  placeholder="Buscar tutor por nombre o email..."
                   value={busquedaTutor}
-                  onChange={(e) => setBusquedaTutor(e.target.value)}
+                  onChange={(e) => sincronizarTutorSeleccionado(e.target.value)}
                   list="tutores-list"
                 />
                 <datalist id="tutores-list">
@@ -466,11 +566,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                         .includes(busquedaTutor.toLowerCase()),
                     )
                     .map((tutor) => (
-                      <option
-                        key={tutor._id}
-                        value={tutor.nombre}
-                        onClick={() => setFormData({ ...formData, tutor })}
-                      />
+                      <option key={tutor._id} value={tutor.nombre} />
                     ))}
                 </datalist>
                 <button
@@ -625,34 +721,38 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
 
   return (
     <div className="perfil-container">
-      <div className="perfil-tabs">
-        {alumnos.map((alumno) => (
-          <button
-            key={alumno._id}
-            className={`perfil-tab ${alumnoSeleccionado?._id === alumno._id ? "active" : ""}`}
-            onClick={() => seleccionarAlumno(alumno)}
-          >
-            <FontAwesomeIcon icon={faChild} />
-            <span>{alumno.nombre}</span>
-          </button>
-        ))}
-      </div>
+      {esTutor && (
+        <div className="perfil-tabs">
+          {alumnos.map((alumno) => (
+            <button
+              key={alumno._id}
+              className={`perfil-tab ${alumnoSeleccionado?._id === alumno._id ? "active" : ""}`}
+              onClick={() => seleccionarAlumno(alumno)}
+            >
+              <FontAwesomeIcon icon={faChild} />
+              <span>{obtenerNombreCompletoAlumno(alumno)}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {alumnoSeleccionado && (
         <div className="perfil-contenido">
           <div className="perfil-header-card">
             <div className="perfil-avatar">
-              {alumnoSeleccionado.nombre.charAt(0).toUpperCase()}
+              {nombreAlumnoSeleccionado.charAt(0).toUpperCase()}
             </div>
             <div className="perfil-header-info">
-              <h2>{alumnoSeleccionado.nombre}</h2>
+              <h2>{nombreAlumnoSeleccionado}</h2>
               {alumnoSeleccionado.fechaNacimiento && (
                 <span className="perfil-edad">
                   {calcularEdad(alumnoSeleccionado.fechaNacimiento)} años
                 </span>
               )}
               {alumnoSeleccionado.grupo?.nombre && (
-                <span className="perfil-grado">{alumnoSeleccionado.grupo.nombre}</span>
+                <span className="perfil-grado">
+                  {alumnoSeleccionado.grupo.nombre}
+                </span>
               )}
             </div>
             <button
@@ -678,7 +778,7 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                   <h3>Información Básica</h3>
                   <div className="perfil-form-grid">
                     <div className="campo">
-                      <label>Nombre *</label>
+                      <label>Nombre(s) *</label>
                       <input
                         type="text"
                         value={formData.nombre}
@@ -686,7 +786,21 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                           setFormData({ ...formData, nombre: e.target.value })
                         }
                         required
-                        placeholder="Nombre del alumno"
+                        placeholder="Nombre(s) del alumno"
+                      />
+                    </div>
+                    <div className="campo">
+                      <label>Apellidos</label>
+                      <input
+                        type="text"
+                        value={formData.apellidos}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            apellidos: e.target.value,
+                          })
+                        }
+                        placeholder="Apellidos del alumno"
                       />
                     </div>
                     <div className="campo">
@@ -748,25 +862,14 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                       </select>
                     </div>
                     <div className="campo">
-                      <label>Tutor</label>
+                      <label>Tutor *</label>
                       <input
                         type="text"
-                        placeholder="Buscar o crear tutor..."
+                        placeholder="Buscar tutor por nombre o email..."
                         value={busquedaTutor}
-                        onChange={(e) => {
-                          setBusquedaTutor(e.target.value);
-                          const tutorEncontrado = tutores.find(
-                            (t) => t.nombre === e.target.value,
-                          );
-                          if (tutorEncontrado) {
-                            setFormData({
-                              ...formData,
-                              tutor: tutorEncontrado,
-                            });
-                          } else {
-                            setFormData({ ...formData, tutor: null });
-                          }
-                        }}
+                        onChange={(e) =>
+                          sincronizarTutorSeleccionado(e.target.value)
+                        }
                         list="tutores-list-edit"
                       />
                       <datalist id="tutores-list-edit">
@@ -796,6 +899,16 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                 <h3>
                   <FontAwesomeIcon icon={faHeartbeat} /> Información Médica
                 </h3>
+                {esTutor && (
+                  <p className="perfil-disclaimer-medico">
+                    {avisoPrecisionMedicaTutor}
+                  </p>
+                )}
+                {mostrarAvisoMedico && (
+                  <p className="perfil-disclaimer-medico">
+                    {avisoInformacionMedica}
+                  </p>
+                )}
                 <div className="perfil-form-grid">
                   <div className="campo">
                     <label>Tipo de Sangre</label>
@@ -1029,6 +1142,16 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                     <span className="dato-valor">
                       {alumnoSeleccionado.tutor?.nombre || "No asignado"}
                     </span>
+                    {alumnoSeleccionado.tutor?.email && (
+                      <span className="dato-detalle">
+                        {alumnoSeleccionado.tutor.email}
+                      </span>
+                    )}
+                    {alumnoSeleccionado.tutor?.telefono && (
+                      <span className="dato-detalle">
+                        {alumnoSeleccionado.tutor.telefono}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1037,6 +1160,11 @@ const PerfilAlumno = ({ alumnoIdInicial }) => {
                 <h3>
                   <FontAwesomeIcon icon={faHeartbeat} /> Información Médica
                 </h3>
+                {mostrarAvisoMedico && (
+                  <p className="perfil-disclaimer-medico">
+                    {avisoInformacionMedica}
+                  </p>
+                )}
                 <div className="perfil-datos-grid">
                   <div className="dato">
                     <span className="dato-label">Tipo de Sangre</span>

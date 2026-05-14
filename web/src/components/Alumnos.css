@@ -6,8 +6,8 @@
   display: inline-flex;
   align-items: center;
   padding: 0.4rem 0.85rem;
-  background: rgba(107, 143, 255, 0.15);
-  color: #6b8fff;
+  background: var(--color-info-soft);
+  color: var(--color-info);
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -46,12 +46,12 @@
 }
 
 .btn-editar-perfil.danger {
-  background: rgba(220, 53, 69, 0.78);
-  border-color: rgba(220, 53, 69, 0.92);
+  background: var(--danger-color);
+  border-color: var(--danger-color);
 }
 
 .btn-editar-perfil.danger:hover {
-  background: rgba(220, 53, 69, 0.92);
+  filter: brightness(0.94);
 }
 
 @keyframes fadeIn {
@@ -150,12 +150,12 @@
 
 .input-field {
   padding: 0.5rem 0.85rem;
-  background: white;
+  background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 6px);
   color: var(--text-primary);
   font-size: 0.9rem;
-  transition: all 0.15s ease;
+  transition: all var(--transition-normal);
 }
 
 .input-field::placeholder {
@@ -165,11 +165,11 @@
 .input-field:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .input-field option {
-  background: white;
+  background: var(--secondary-bg);
   color: var(--text-primary);
 }
 
@@ -193,16 +193,16 @@
 }
 
 .btn-primary {
-  background: var(--accent-primary);
-  color: white;
+  background: var(--gradient-accent);
+  color: var(--color-text-inverse);
   border: none;
   padding: 0.6rem 1.15rem;
   border-radius: var(--radius-md, 10px);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0, 217, 192, 0.2);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (min-width: 600px) {
@@ -214,7 +214,7 @@
 .btn-primary:hover {
   background: var(--accent-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 217, 192, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
@@ -226,7 +226,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 @media (min-width: 600px) {
@@ -248,13 +248,13 @@
 }
 
 .form-message.success {
-  background: rgba(72, 187, 120, 0.15);
+  background: var(--color-success-soft);
   color: var(--success-color);
   border: 1px solid var(--success-color);
 }
 
 .form-message.error {
-  background: rgba(245, 101, 101, 0.15);
+  background: var(--color-danger-soft);
   color: var(--danger-color);
   border: 1px solid var(--danger-color);
 }
@@ -311,7 +311,7 @@
 .tutor-item {
   padding: 0.5rem;
   cursor: pointer;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tutor-item:last-child {
@@ -319,7 +319,7 @@
 }
 
 .tutor-item:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--color-surface-contrast);
 }
 
 .tutor-item strong,
@@ -330,7 +330,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--color-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -342,7 +342,7 @@
   background: var(--secondary-bg, var(--bg-card));
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg, 14px);
-  box-shadow: var(--shadow-lg, 0 10px 25px -5px rgba(0, 0, 0, 0.15));
+  box-shadow: var(--shadow-lg);
   width: min(92vw, 560px);
   padding: 1.75rem;
   animation: slideUp 0.25s ease;
@@ -523,29 +523,29 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: rgba(0, 217, 192, 0.2);
+  background: var(--color-accent-soft-strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-cyan);
+  color: var(--accent-primary);
   font-size: 1.5rem;
   flex-shrink: 0;
 }
 
 .student-info h4 {
   font-size: 1rem;
-  color: var(--text-white);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .student-info p {
   font-size: 0.8rem;
-  color: var(--text-gray);
+  color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
 
 .student-info p strong {
-  color: var(--text-white);
+  color: var(--text-primary);
 }
 
 .badge {
@@ -559,13 +559,13 @@
 }
 
 .badge-activo {
-  background: rgba(0, 217, 192, 0.2);
-  color: var(--accent-cyan);
+  background: var(--color-accent-soft-strong);
+  color: var(--accent-primary);
 }
 
 .badge-inactivo {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ff6b6b;
+  background: var(--color-danger-soft);
+  color: var(--danger-color);
 }
 
 @media (max-width: 768px) {

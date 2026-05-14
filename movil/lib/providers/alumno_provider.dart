@@ -59,6 +59,7 @@ class AlumnoProvider with ChangeNotifier {
   /// Crear un nuevo alumno
   Future<bool> createAlumno({
     required String nombre,
+    String? apellidos,
     required String uidTarjeta,
   }) async {
     _isLoading = true;
@@ -67,6 +68,7 @@ class AlumnoProvider with ChangeNotifier {
 
     final response = await _alumnoService.createAlumno(
       nombre: nombre,
+      apellidos: apellidos,
       uidTarjeta: uidTarjeta,
     );
 
@@ -87,6 +89,7 @@ class AlumnoProvider with ChangeNotifier {
   Future<bool> updateAlumno({
     required String id,
     String? nombre,
+    String? apellidos,
     String? uidTarjeta,
   }) async {
     _isLoading = true;
@@ -96,6 +99,7 @@ class AlumnoProvider with ChangeNotifier {
     final response = await _alumnoService.updateAlumno(
       id: id,
       nombre: nombre,
+      apellidos: apellidos,
       uidTarjeta: uidTarjeta,
     );
 

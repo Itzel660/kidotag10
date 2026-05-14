@@ -22,11 +22,18 @@ import {
 import { apiDelete, apiGet, apiPost, apiPut } from "../config/api.config";
 import "./PerfilAlumno.css";
 import "./Alumnos.css";
+import {
+  compararAlumnosPorNombre,
+  obtenerCamposNombreAlumno,
+  obtenerNombreCompletoAlumno,
+  obtenerTextoBusquedaAlumno,
+} from "../utils/alumnoNombre";
 
 const formInicial = {
   nombre: "",
   uidTarjeta: "",
   fechaNacimiento: "",
+  apellidos: "",
   genero: "",
   alergias: [],
   condicionesMedicas: [],
@@ -188,9 +195,7 @@ const Alumnos = ({
               </select>
             )}
             {esProfesor && grupoProfesor && (
-              <span className="grupo-badge-header">
-                {grupoProfesor.nombre}
-              </span>
+              <span className="grupo-badge-header">{grupoProfesor.nombre}</span>
             )}
             <button className="btn-primary" onClick={onCrearAlumno}>
               <FontAwesomeIcon icon={faUserPlus} /> Nuevo Alumno
@@ -211,20 +216,22 @@ const Alumnos = ({
               <tbody>
                 {alumnosFiltradosPorGrupo.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="empty">
+                    <td colSpan="5" className="empty">
                       No hay alumnos registrados
                     </td>
                   </tr>
                 ) : (
                   alumnosFiltradosPorGrupo.map((alumno) => (
                     <tr key={alumno._id}>
-                      <td>
-                        <strong>{alumno.nombre}</strong>
+                      <td data-label="Nombre">
+                        <strong>{obtenerNombreCompletoAlumno(alumno)}</strong>
                       </td>
-                      <td>{alumno.uidTarjeta}</td>
-                      <td>{alumno.grupo?.nombre || "Sin grupo"}</td>
-                      <td>{alumno.tutor?.nombre || "-"}</td>
-                      <td className="actions">
+                      <td data-label="UID Tarjeta">{alumno.uidTarjeta}</td>
+                      <td data-label="Grupo">
+                        {alumno.grupo?.nombre || "Sin grupo"}
+                      </td>
+                      <td data-label="Tutor">{alumno.tutor?.nombre || "-"}</td>
+                      <td data-label="Acciones" className="actions">
                         <button
                           className="btn-icon btn-edit"
                           onClick={() => onEditarAlumno(alumno._id)}
@@ -236,7 +243,10 @@ const Alumnos = ({
                           className="btn-icon btn-delete"
                           onClick={() => {
                             setAlumnoSeleccionado(alumno);
-                            eliminarAlumno(alumno._id, alumno.nombre);
+                            eliminarAlumno(
+                              alumno._id,
+                              obtenerNombreCompletoAlumno(alumno),
+                            );
                           }}
                           title="Eliminar"
                         >
@@ -255,7 +265,7 @@ const Alumnos = ({
   };
 
   const inicializarForm = (alumno) => ({
-    nombre: alumno.nombre || "",
+    ...obtenerCamposNombreAlumno(alumno),
     uidTarjeta: alumno.uidTarjeta || "",
     fechaNacimiento: alumno.fechaNacimiento
       ? new Date(alumno.fechaNacimiento).toISOString().split("T")[0]
@@ -359,6 +369,7 @@ const Alumnos = ({
 
       const datosBase = {
         nombre: payload.nombre,
+        apellidos: payload.apellidos,
         uidTarjeta: payload.uidTarjeta,
         fechaNacimiento: payload.fechaNacimiento,
         genero: payload.genero,
@@ -415,9 +426,7 @@ const Alumnos = ({
             item._id === alumnoActualizado._id ? alumnoActualizado : item,
           );
         }
-        return [...prev, alumnoActualizado].sort((a, b) =>
-          a.nombre.localeCompare(b.nombre),
-        );
+        return [...prev, alumnoActualizado].sort(compararAlumnosPorNombre);
       });
 
       setAlumnoSeleccionado(alumnoActualizado);
@@ -432,7 +441,8 @@ const Alumnos = ({
 
   const eliminarAlumno = async (id = null, nombre = null) => {
     const alumnoId = id || alumnoSeleccionado?._id;
-    const alumnoNombre = nombre || alumnoSeleccionado?.nombre;
+    const alumnoNombre =
+      nombre || obtenerNombreCompletoAlumno(alumnoSeleccionado || {});
 
     if (!alumnoId) return;
     if (!window.confirm(`¿Estás seguro de eliminar a ${alumnoNombre}?`)) return;
@@ -474,7 +484,7 @@ const Alumnos = ({
     const tutorEmail = alumno.tutor?.email?.toLowerCase() || "";
 
     return (
-      alumno.nombre.toLowerCase().includes(texto) ||
+      obtenerTextoBusquedaAlumno(alumno).includes(texto) ||
       alumno.uidTarjeta.toLowerCase().includes(texto) ||
       tutorNombre.includes(texto) ||
       tutorEmail.includes(texto)

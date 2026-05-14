@@ -206,7 +206,7 @@ exports.obtenerGruposProfesor = async (req, res) => {
     }
 
     const grupos = await Grupo.find({ profesor: id })
-      .populate("alumnos", "nombre uidTarjeta")
+      .populate("alumnos", "nombre apellidos uidTarjeta")
       .lean();
 
     res.status(200).json({
@@ -239,7 +239,9 @@ exports.obtenerAlumnosPorGrupo = async (req, res) => {
     const profesorId = req.user.id; // Suponiendo que el ID del profesor logueado está en req.user
 
     // Obtener los grupos del profesor logueado
-    const grupos = await Grupo.find({ profesor: profesorId }).populate("alumnos").lean();
+    const grupos = await Grupo.find({ profesor: profesorId })
+      .populate("alumnos")
+      .lean();
 
     if (!grupos || grupos.length === 0) {
       return res.status(404).json({

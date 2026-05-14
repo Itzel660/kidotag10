@@ -7,6 +7,11 @@ const alumnoSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    apellidos: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     uidTarjeta: {
       type: String,
       required: true,
@@ -54,7 +59,7 @@ const alumnoSchema = new mongoose.Schema(
     tutor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Tutor",
-      default: null,
+      required: [true, "El tutor es requerido"],
     },
     // Información escolar
     notasEscolares: {

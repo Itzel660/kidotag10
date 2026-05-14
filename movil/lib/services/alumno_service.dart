@@ -103,11 +103,13 @@ class AlumnoService {
   ///
   /// Parámetros:
   /// - nombre: Nombre del alumno
+  /// - apellidos: Apellidos del alumno (opcional)
   /// - uidTarjeta: UID de la tarjeta NFC
   ///
   /// Retorna: Alumno creado
   Future<ApiResponse<Alumno>> createAlumno({
     required String nombre,
+    String? apellidos,
     required String uidTarjeta,
   }) async {
     try {
@@ -123,7 +125,11 @@ class AlumnoService {
           .post(
             url,
             headers: ApiConfig.authHeaders(token),
-            body: jsonEncode({'nombre': nombre, 'uidTarjeta': uidTarjeta}),
+            body: jsonEncode({
+              'nombre': nombre,
+              if (apellidos != null) 'apellidos': apellidos,
+              'uidTarjeta': uidTarjeta,
+            }),
           )
           .timeout(ApiConfig.requestTimeout);
 
@@ -154,12 +160,14 @@ class AlumnoService {
   /// Parámetros:
   /// - id: ID del alumno
   /// - nombre: Nuevo nombre (opcional)
+  /// - apellidos: Nuevos apellidos (opcional)
   /// - uidTarjeta: Nuevo UID de tarjeta (opcional)
   ///
   /// Retorna: Alumno actualizado
   Future<ApiResponse<Alumno>> updateAlumno({
     required String id,
     String? nombre,
+    String? apellidos,
     String? uidTarjeta,
   }) async {
     try {
@@ -172,6 +180,7 @@ class AlumnoService {
       // Construir body solo con campos que se van a actualizar
       final Map<String, dynamic> body = {};
       if (nombre != null) body['nombre'] = nombre;
+      if (apellidos != null) body['apellidos'] = apellidos;
       if (uidTarjeta != null) body['uidTarjeta'] = uidTarjeta;
 
       final url = Uri.parse(ApiConfig.url(ApiConfig.actualizarAlumno(id)));

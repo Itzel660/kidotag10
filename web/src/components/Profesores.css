@@ -45,22 +45,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.25rem;
-  background: var(--accent-primary);
-  color: white;
+  background: var(--gradient-accent);
+  color: var(--color-text-inverse);
   border: none;
   border-radius: var(--radius-md, 10px);
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0, 217, 192, 0.2);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
 }
 
 .profesores-header .btn-primary:hover {
   background: var(--accent-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 217, 192, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .form-container {
@@ -113,7 +113,7 @@
 .form-group input:focus {
   border-color: var(--accent-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .checkbox-group label {
@@ -192,7 +192,7 @@
 }
 
 .badge-admin {
-  background: rgba(237, 137, 54, 0.15);
+  background: var(--color-warning-soft);
   color: var(--warning-color);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
@@ -201,7 +201,7 @@
 }
 
 .badge-profesor {
-  background: rgba(0, 217, 192, 0.15);
+  background: var(--color-accent-soft-strong);
   color: var(--accent-primary);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
@@ -232,7 +232,7 @@
 }
 
 .btn-edit:hover {
-  background: rgba(0, 217, 192, 0.1);
+  background: var(--color-accent-soft);
 }
 
 .btn-delete {
@@ -240,7 +240,7 @@
 }
 
 .btn-delete:hover {
-  background: rgba(245, 101, 101, 0.1);
+  background: var(--color-danger-soft);
 }
 
 @media (max-width: 768px) {

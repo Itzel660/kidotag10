@@ -16,11 +16,12 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../config/api.config";
 import { useAuth } from "../context/AuthContext";
 import "./Grupos.css";
 
-const Grupos = () => {
+const Grupos = ({ grupoExpandidoInicial = null }) => {
   const { token, user } = useAuth();
   const [grupos, setGrupos] = useState([]);
   const [profesores, setProfesores] = useState([]);
   const [alumnos, setAlumnos] = useState([]);
+  const esAdmin = user?.tipo === "profesor" && user?.esAdmin;
   const [busqueda, setBusqueda] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -39,6 +40,10 @@ const Grupos = () => {
     cargarProfesores();
     cargarAlumnos();
   }, []);
+
+  useEffect(() => {
+    setGrupoExpandido(grupoExpandidoInicial || null);
+  }, [grupoExpandidoInicial]);
 
   const cargarGrupos = async () => {
     try {
@@ -77,6 +82,7 @@ const Grupos = () => {
     e.preventDefault();
     try {
       const payload = { ...formData };
+      payload.profesor = esAdmin ? formData.profesor : user?._id || formData.profesor;
       if (!payload.profesor) {
         alert("Debe seleccionar un profesor");
         return;
@@ -187,15 +193,19 @@ const Grupos = () => {
   const alumnosEnGrupo = (grupo) => grupo.alumnos || [];
 
   const alumnosDisponibles = (grupo) => {
-    const idsEnGrupo = new Set(
-      (grupo.alumnos || []).map((a) => a._id),
-    );
+    const idsEnGrupo = new Set((grupo.alumnos || []).map((a) => a._id));
     return alumnos.filter(
       (a) =>
         !idsEnGrupo.has(a._id) &&
         a.nombre?.toLowerCase().includes(busquedaAlumno.toLowerCase()),
     );
   };
+
+  const profesorMostrado =
+    profesores.find((profesor) => profesor._id === formData.profesor)?.nombre ||
+    editando?.profesor?.nombre ||
+    user?.nombre ||
+    "";
 
   return (
     <div className="grupos-container">
@@ -239,20 +249,30 @@ const Grupos = () => {
               </div>
               <div className="form-group">
                 <label>Profesor *</label>
-                <select
-                  value={formData.profesor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, profesor: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Seleccionar profesor</option>
-                  {profesores.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.nombre}
-                    </option>
-                  ))}
-                </select>
+                {esAdmin ? (
+                  <select
+                    value={formData.profesor}
+                    onChange={(e) =>
+                      setFormData({ ...formData, profesor: e.target.value })
+                    }
+                    required
+                  >
+                    <option value="">Seleccionar profesor</option>
+                    {profesores.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={profesorMostrado}
+                    readOnly
+                    disabled
+                    placeholder="Profesor asignado"
+                  />
+                )}
               </div>
               <div className="form-group">
                 <label>Horario</label>
@@ -332,15 +352,17 @@ const Grupos = () => {
                   <tr
                     className={grupoExpandido === g._id ? "row-expanded" : ""}
                   >
-                    <td>
-                      <strong>{g.nombre}</strong>
-                      {g.descripcion && (
-                        <span className="grupo-desc">{g.descripcion}</span>
-                      )}
+                    <td data-label="Nombre">
+                      <div className="table-cell-stack">
+                        <strong>{g.nombre}</strong>
+                        {g.descripcion && (
+                          <span className="grupo-desc">{g.descripcion}</span>
+                        )}
+                      </div>
                     </td>
-                    <td>{g.profesor?.nombre || "-"}</td>
-                    <td>{g.horario || "-"}</td>
-                    <td>
+                    <td data-label="Profesor">{g.profesor?.nombre || "-"}</td>
+                    <td data-label="Horario">{g.horario || "-"}</td>
+                    <td data-label="Alumnos">
                       <span
                         className="badge-alumnos"
                         onClick={() =>
@@ -361,14 +383,14 @@ const Grupos = () => {
                         />
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       {g.activo !== false ? (
                         <span className="badge badge-activo">Activo</span>
                       ) : (
                         <span className="badge badge-inactivo">Inactivo</span>
                       )}
                     </td>
-                    <td className="actions">
+                    <td data-label="Acciones" className="actions">
                       <button
                         className="btn-icon btn-edit"
                         onClick={() => editar(g)}

@@ -251,13 +251,13 @@ const Profesores = () => {
             ) : (
               profesoresFiltrados.map((p) => (
                 <tr key={p._id}>
-                  <td>
+                  <td data-label="Nombre">
                     <strong>{p.nombre}</strong>
                   </td>
-                  <td>{p.email}</td>
-                  <td>{p.telefono || "-"}</td>
-                  <td>{p.especialidad || "-"}</td>
-                  <td>
+                  <td data-label="Email">{p.email}</td>
+                  <td data-label="Teléfono">{p.telefono || "-"}</td>
+                  <td data-label="Especialidad">{p.especialidad || "-"}</td>
+                  <td data-label="Rol">
                     {p.esAdmin ? (
                       <span className="badge badge-admin">
                         <FontAwesomeIcon icon={faShieldAlt} /> Admin
@@ -266,7 +266,7 @@ const Profesores = () => {
                       <span className="badge badge-profesor">Profesor</span>
                     )}
                   </td>
-                  <td className="actions">
+                  <td data-label="Acciones" className="actions">
                     <button
                       className="btn-icon btn-edit"
                       onClick={() => editar(p)}
