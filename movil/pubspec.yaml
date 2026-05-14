@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   image_picker: ^1.0.7
+  fl_chart: ^0.69.2
 
   # HTTP client para peticiones al API
   http: ^1.2.0
