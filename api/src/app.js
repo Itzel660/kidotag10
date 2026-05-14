@@ -11,6 +11,7 @@ const tutorRoutes = require("./routes/tutor.routes");
 const profesorRoutes = require("./routes/profesor.routes");
 const grupoRoutes = require("./routes/grupo.routes");
 const mensajeRoutes = require("./routes/mensaje.routes");
+const anuncioRoutes = require("./routes/anuncio.routes");
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/v1/tutores", tutorRoutes);
 app.use("/api/v1/profesores", profesorRoutes);
 app.use("/api/v1/grupos", grupoRoutes);
 app.use("/api/v1/mensajes", mensajeRoutes);
+app.use("/api/v1/anuncios", anuncioRoutes);
 app.use("/api/items", itemRoutes);
 
 module.exports = app;

@@ -1,4 +1,5 @@
 const Mensaje = require("../models/mensaje.model");
+const Anuncio = require("../models/anuncio.model");
 const Tutor = require("../models/tutor.model");
 const Grupo = require("../models/grupo.model");
 const Alumno = require("../models/alumno.model");
@@ -92,7 +93,7 @@ exports.enviarMensaje = async (req, res) => {
     const mensajePoblado = await Mensaje.findById(nuevoMensaje._id)
       .populate("remitente", "nombre email")
       .populate("destinatario", "nombre email")
-      .populate("alumno", "nombre uidTarjeta");
+      .populate("alumno", "nombre apellidos uidTarjeta");
 
     console.log(
       `[MENSAJES] ✓ Mensaje enviado: ${tutor.nombre} -> profesor del grupo ${grupo.nombre} (${tipo})`,
@@ -134,7 +135,7 @@ exports.obtenerMensajes = async (req, res) => {
     const mensajes = await Mensaje.find(filtro)
       .populate("remitente", "nombre email telefono")
       .populate("destinatario", "nombre email")
-      .populate("alumno", "nombre uidTarjeta")
+      .populate("alumno", "nombre apellidos uidTarjeta")
       .sort({ createdAt: -1 })
       .limit(100);
 
@@ -272,7 +273,7 @@ exports.responderMensaje = async (req, res) => {
     const mensajePoblado = await Mensaje.findById(mensajeId)
       .populate("remitente", "nombre email telefono")
       .populate("destinatario", "nombre email")
-      .populate("alumno", "nombre uidTarjeta");
+      .populate("alumno", "nombre apellidos uidTarjeta");
 
     console.log(`[MENSAJES] ✓ Mensaje ${estado}: ${mensajeId}`);
 
@@ -349,14 +350,21 @@ exports.contarNoLeidos = async (req, res) => {
 
     if (tipo === "tutor") {
       // Contar mensajes con respuesta nueva (aprobado/rechazado) que el tutor aún no ha visto
-      const countRespuestas = await Mensaje.countDocuments({
-        remitente: id,
-        estado: { $in: ["aprobado", "rechazado"] },
-        leido: false,
-      });
+      const [countRespuestas, countAnuncios] = await Promise.all([
+        Mensaje.countDocuments({
+          remitente: id,
+          estado: { $in: ["aprobado", "rechazado"] },
+          leido: false,
+        }),
+        Anuncio.countDocuments({
+          destinatarios: id,
+          "vistoPor.tutor": { $nin: [id] },
+        }),
+      ]);
+
       return res
         .status(200)
-        .json({ ok: true, data: { count: countRespuestas } });
+        .json({ ok: true, data: { count: countRespuestas + countAnuncios } });
     } else if (tipo === "profesor") {
       const Profesor = require("../models/profesor.model");
       const profesor = await Profesor.findById(id);
